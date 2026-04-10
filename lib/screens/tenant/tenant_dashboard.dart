@@ -1,105 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import '../../services/auth_service.dart';
-// import 'tenant_home_screen.dart';
-// import 'tenant_payment_screen.dart';
-// import 'tenant_notice_screen.dart';
-// import 'tenant_maintenance_screen.dart';
-// import 'tenant_utility_screen.dart';
-
-
-// class TenantDashboard extends StatefulWidget {
-//   const TenantDashboard({super.key});
-
-//   @override
-//   State<TenantDashboard> createState() => _TenantDashboardState();
-// }
-
-// class _TenantDashboardState extends State<TenantDashboard> {
-//   int _currentIndex = 0;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final user = context.read<AuthService>().currentUser!;
-
-//     final pages = [
-//       TenantHomeScreen(user: user),
-//       TenantPaymentScreen(user: user),
-//       TenantNoticeScreen(user: user),
-//       TenantMaintenanceScreen(user: user),
-//       TenantUtilityScreen(user: user),    // ← নতুন
-//     ];
-
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('House Manager', style: TextStyle(fontWeight: FontWeight.bold)),
-//         centerTitle: true,
-//         actions: [
-//           IconButton(
-//             icon: const Icon(Icons.logout_rounded),
-//             onPressed: () => _confirmLogout(context),
-//           ),
-//         ],
-//       ),
-//       body: pages[_currentIndex],
-//       bottomNavigationBar: NavigationBar(
-//         selectedIndex: _currentIndex,
-//         onDestinationSelected: (i) => setState(() => _currentIndex = i),
-//         destinations: const [
-//           NavigationDestination(
-//             icon: Icon(Icons.home_outlined),
-//             selectedIcon: Icon(Icons.home_rounded),
-//             label: 'হোম',
-//           ),
-//           NavigationDestination(
-//             icon: Icon(Icons.receipt_long_outlined),
-//             selectedIcon: Icon(Icons.receipt_long_rounded),
-//             label: 'ভাড়া',
-//           ),
-//           NavigationDestination(
-//             icon: Icon(Icons.campaign_outlined),
-//             selectedIcon: Icon(Icons.campaign_rounded),
-//             label: 'নোটিশ',
-//           ),
-//           NavigationDestination(
-//             icon: Icon(Icons.build_outlined),
-//             selectedIcon: Icon(Icons.build_rounded),
-//             label: 'মেরামত',
-//           ),
-//           NavigationDestination(
-//             icon: Icon(Icons.electric_bolt_outlined),
-//             selectedIcon: Icon(Icons.electric_bolt_rounded),
-//             label: 'বিল',
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   void _confirmLogout(BuildContext context) {
-//     showDialog(
-//       context: context,
-//       builder: (_) => AlertDialog(
-//         title: const Text('Logout'),
-//         content: const Text('আপনি কি logout করতে চান?'),
-//         actions: [
-//           TextButton(onPressed: () => Navigator.pop(context), child: const Text('না')),
-//           FilledButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//               context.read<AuthService>().logout();
-//             },
-//             child: const Text('হ্যাঁ'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-
-
-
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -110,6 +8,7 @@ import 'tenant_notice_screen.dart';
 import 'tenant_maintenance_screen.dart';
 import 'tenant_utility_screen.dart';
 import '../landlord/settings_screen.dart';
+import '../../../widgets/profile_avatar.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -189,15 +88,24 @@ class _TenantDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: Colors.white24,
-                    child: Text(
-                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'T',
-                      style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                  // CircleAvatar(
+                  //   radius: 32,
+                  //   backgroundColor: Colors.white24,
+                  //   child: Text(
+                  //     user.name.isNotEmpty ? user.name[0].toUpperCase() : 'T',
+                  //     style: const TextStyle(
+                  //         fontSize: 28,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.white),
+                  //   ),
+                  // ),
+                  Consumer<AuthService>(
+                    builder: (context, auth, _) => ProfileAvatar(
+                      name: auth.currentUser?.name ?? user.name,
+                      photoUrl: auth.currentUser?.photoUrl,
+                      userId: user.uid,
+                      radius: 52,
+                      editable: true,
                     ),
                   ),
                   const SizedBox(height: 12),

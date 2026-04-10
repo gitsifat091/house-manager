@@ -13,6 +13,7 @@ import 'maintenance_requests_screen.dart';
 import 'utility_screen.dart';
 import 'archive_screen.dart';
 import 'settings_screen.dart';
+import '../../../widgets/profile_avatar.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({super.key});
@@ -92,13 +93,22 @@ class _AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: Colors.white24,
-                    child: Text(
-                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'L',
-                      style: const TextStyle(
-                          fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                  // CircleAvatar(
+                  //   radius: 32,
+                  //   backgroundColor: Colors.white24,
+                  //   child: Text(
+                  //     user.name.isNotEmpty ? user.name[0].toUpperCase() : 'L',
+                  //     style: const TextStyle(
+                  //         fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                  //   ),
+                  // ),
+                  Consumer<AuthService>(
+                    builder: (context, auth, _) => ProfileAvatar(
+                      name: auth.currentUser?.name ?? user.name,
+                      photoUrl: auth.currentUser?.photoUrl,
+                      userId: user.uid,
+                      radius: 52,
+                      editable: true,
                     ),
                   ),
                   const SizedBox(height: 12),

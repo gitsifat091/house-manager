@@ -8,6 +8,7 @@ class UserModel {
   final UserRole role;
   final String? roomId;       // Only for tenant
   final String? propertyId;   // Only for tenant
+  final String? photoUrl;
 
   UserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class UserModel {
     required this.role,
     this.roomId,
     this.propertyId,
+    this.photoUrl, 
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -28,6 +30,7 @@ class UserModel {
       role: map['role'] == 'landlord' ? UserRole.landlord : UserRole.tenant,
       roomId: map['roomId'],
       propertyId: map['propertyId'],
+      photoUrl: map['photoUrl'],
     );
   }
 
@@ -39,5 +42,6 @@ class UserModel {
     'role': role == UserRole.landlord ? 'landlord' : 'tenant',
     'roomId': roomId,
     'propertyId': propertyId,
+    'photoUrl': photoUrl, 
   };
 }

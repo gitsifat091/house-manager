@@ -101,6 +101,23 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // এই method যোগ করো
+  Future<void> updateProfilePicture(String photoUrl) async {
+    if (_currentUser == null) return;
+    await _db.collection('users').doc(_currentUser!.uid).update({
+      'photoUrl': photoUrl,
+    });
+    _currentUser = UserModel(
+      uid: _currentUser!.uid,
+      name: _currentUser!.name,
+      email: _currentUser!.email,
+      phone: _currentUser!.phone,
+      role: _currentUser!.role,
+      photoUrl: photoUrl,
+    );
+    notifyListeners();
+  }
+
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found': return 'এই email এ কোনো account নেই।';
