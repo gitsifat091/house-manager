@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/settings_service.dart';
 import '../../../services/auth_service.dart';
+import '../auth/change_password_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -77,8 +78,10 @@ class SettingsScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.lock_reset_rounded,
                 title: 'Password পরিবর্তন',
-                subtitle: 'Email এ reset link পাঠানো হবে',
-                onTap: () => _showPasswordResetSheet(context),
+                subtitle: 'Current password দিয়ে নতুন password সেট করুন',
+                onTap: () => Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => const ChangePasswordScreen(),
+                )),
               ),
 
               _SettingsTile(

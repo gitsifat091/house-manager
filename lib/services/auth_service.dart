@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -92,14 +93,14 @@ class AuthService extends ChangeNotifier {
   }
 
   // এই method যোগ করো
-  Future<String?> sendPasswordReset(String email) async {
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-      return null; // success
-    } on FirebaseAuthException catch (e) {
-      return _getErrorMessage(e.code);
-    }
-  }
+  // Future<String?> sendPasswordReset(String email) async {
+  //   try {
+  //     await _auth.sendPasswordResetEmail(email: email);
+  //     return null; // success
+  //   } on FirebaseAuthException catch (e) {
+  //     return _getErrorMessage(e.code);
+  //   }
+  // }
 
   // এই method যোগ করো
   Future<void> updateProfilePicture(String photoUrl) async {
@@ -116,6 +117,46 @@ class AuthService extends ChangeNotifier {
       photoUrl: photoUrl,
     );
     notifyListeners();
+  }
+
+  // ── Password Change (current password verify করে) ──
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser!;
+      // Re-authenticate first
+      final cred = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(cred);
+      // Now update password
+      await user.updatePassword(newPassword);
+      return null; // success
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'wrong-password': return 'বর্তমান password সঠিক নয়।';
+        case 'weak-password': return 'নতুন password কমপক্ষে ৬ character হতে হবে।';
+        case 'requires-recent-login': return 'আবার login করে চেষ্টা করুন।';
+        default: return 'কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+      }
+    }
+  }
+
+  // ── Forgot Password ──
+  Future<String?> sendPasswordReset(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found': return 'এই email এ কোনো account নেই।';
+        case 'invalid-email': return 'সঠিক email দিন।';
+        default: return 'কিছু একটা সমস্যা হয়েছে।';
+      }
+    }
   }
 
   String _getErrorMessage(String code) {
