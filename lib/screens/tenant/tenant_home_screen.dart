@@ -4,6 +4,8 @@ import '../../../models/tenant_model.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user_model.dart';
 import 'tenant_edit_profile_screen.dart';
+import '../shared/notification_screen.dart';
+
 
 class TenantHomeScreen extends StatelessWidget {
   final UserModel user;
@@ -78,6 +80,7 @@ class TenantHomeScreen extends StatelessWidget {
                 expandedHeight: 180,
                 pinned: true,
                 actions: [
+                  NotificationBell(userId: user.uid),
                   IconButton(
                     icon: const Icon(Icons.edit_rounded, color: Colors.white),
                     onPressed: () => Navigator.push(

@@ -91,6 +91,16 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // এই method যোগ করো
+  Future<String?> sendPasswordReset(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null; // success
+    } on FirebaseAuthException catch (e) {
+      return _getErrorMessage(e.code);
+    }
+  }
+
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found': return 'এই email এ কোনো account নেই।';

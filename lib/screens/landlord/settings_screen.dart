@@ -283,59 +283,84 @@ class SettingsScreen extends StatelessWidget {
 
   void _showPasswordResetSheet(BuildContext context) {
     final user = context.read<AuthService>().currentUser!;
+    bool _sending = false;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Password পরিবর্তন',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.email_outlined,
-                      color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '${user.email} এ একটি reset link পাঠানো হবে।',
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Password পরিবর্তন',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.email_outlined,
+                        color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${user.email} এ একটি reset link পাঠানো হবে।',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: Firebase password reset
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Password reset — শীঘ্রই implement হবে'),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.send_rounded),
-                label: const Text('Reset Link পাঠান'),
+              const SizedBox(height: 8),
+              const Text(
+                'Email এ link আসবে → click করুন → নতুন password দিন।',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton.icon(
+                  onPressed: _sending
+                      ? null
+                      : () async {
+                          setModalState(() => _sending = true);
+                          final error = await context
+                              .read<AuthService>()
+                              .sendPasswordReset(user.email);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(error ??
+                                    'Reset link পাঠানো হয়েছে! Email চেক করুন।'),
+                                backgroundColor:
+                                    error != null ? Colors.red : Colors.green,
+                              ),
+                            );
+                          }
+                        },
+                  icon: _sending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Icon(Icons.send_rounded),
+                  label: Text(_sending ? 'পাঠানো হচ্ছে...' : 'Reset Link পাঠান'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

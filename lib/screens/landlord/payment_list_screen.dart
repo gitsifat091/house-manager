@@ -9,6 +9,7 @@ import '../../models/tenant_model.dart';
 import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/pdf_service.dart';
+import '../shared/notification_screen.dart';
 
 class PaymentListScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;
@@ -90,6 +91,7 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
         title: const Text('ভাড়া সংগ্রহ'),
         centerTitle: true,
         actions: [
+          NotificationBell(userId: user.uid),
           _generating
               ? const Padding(
                   padding: EdgeInsets.all(16),

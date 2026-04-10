@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/maintenance_service.dart';
 import '../../../models/maintenance_model.dart';
+import 'package:provider/provider.dart';
+import '../../../services/auth_service.dart';
+import '../shared/notification_screen.dart'; // path adjust করো
 
 class MaintenanceRequestsScreen extends StatelessWidget {
   const MaintenanceRequestsScreen({super.key});
@@ -13,7 +16,11 @@ class MaintenanceRequestsScreen extends StatelessWidget {
     final service = MaintenanceService();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('মেরামতের অনুরোধ'), centerTitle: true),
+      appBar: AppBar(title: const Text('মেরামতের অনুরোধ'), centerTitle: true,
+      actions: [
+        NotificationBell(userId: user.uid),
+      ],
+      ),
       body: StreamBuilder<List<MaintenanceModel>>(
         stream: service.getRequests(user.uid),
         builder: (context, snap) {

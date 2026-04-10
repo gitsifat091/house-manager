@@ -29,6 +29,7 @@ class TenantNoticeScreen extends StatelessWidget {
           onPressed: () => scaffoldKey?.currentState?.openDrawer(),
         ),
         title: const Text('নোটিশ বোর্ড'), centerTitle: true),
+        
       body: FutureBuilder<String?>(
         future: _getLandlordId(user.email),
         builder: (context, snap) {

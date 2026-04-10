@@ -6,6 +6,7 @@ import '../../services/property_service.dart';
 import '../../models/tenant_model.dart';
 import 'add_edit_tenant_screen.dart';
 import 'landlord_edit_tenant_screen.dart';
+import '../shared/notification_screen.dart';
 
 class TenantListScreen extends StatelessWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;

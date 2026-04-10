@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../services/auth_service.dart';
 import '../../../models/payment_model.dart';
+import '../shared/notification_screen.dart';
 
 class ChartScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;
@@ -105,6 +106,7 @@ class _ChartScreenState extends State<ChartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<AuthService>().currentUser!;
     final color = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -116,6 +118,7 @@ class _ChartScreenState extends State<ChartScreen> {
         title: const Text('রিপোর্ট ও পরিসংখ্যান'),
         centerTitle: true,
         actions: [
+          NotificationBell(userId: user.uid),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () {

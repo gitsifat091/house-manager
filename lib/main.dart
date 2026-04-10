@@ -8,6 +8,7 @@ import 'screens/landlord/landlord_dashboard.dart';
 import 'screens/tenant/tenant_dashboard.dart';
 import 'models/user_model.dart';
 import 'services/settings_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,8 +93,11 @@ class AuthWrapper extends StatelessWidget {
         }
         // Role-based routing
         if (auth.currentUser!.role == UserRole.landlord) {
+          // Initialize notifications
+          NotificationService().initialize(auth.currentUser!.uid);
           return const LandlordDashboard();
         } else {
+          NotificationService().initialize(auth.currentUser!.uid);
           return const TenantDashboard();
         }
       },

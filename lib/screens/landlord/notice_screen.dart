@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/notice_service.dart';
 import '../../../models/notice_model.dart';
+import '../shared/notification_screen.dart';
 
 class NoticeScreen extends StatelessWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;
