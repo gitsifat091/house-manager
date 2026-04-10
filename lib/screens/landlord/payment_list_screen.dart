@@ -343,131 +343,245 @@ class _PaymentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPaid = payment.status == PaymentStatus.paid;
     final color = Theme.of(context).colorScheme;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor:
-                  isPaid ? Colors.green.shade100 : Colors.orange.shade100,
-              child: Text(
-                payment.tenantName.isNotEmpty
-                    ? payment.tenantName[0].toUpperCase()
-                    : '?',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isPaid
-                        ? Colors.green.shade800
-                        : Colors.orange.shade800),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(payment.tenantName,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold)),
-                  Text(
-                      '${payment.propertyName} • রুম ${payment.roomNumber}',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: color.onSurface.withOpacity(0.6))),
-                  const SizedBox(height: 4),
-                  Row(
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Color(int.parse(payment.statusBgColorHex, radix: 16)),
+                  child: Text(
+                    payment.tenantName.isNotEmpty
+                        ? payment.tenantName[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(int.parse(payment.statusColorHex, radix: 16))),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('৳${payment.amount.toStringAsFixed(0)}',
+                      Text(payment.tenantName,
                           style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isPaid
-                              ? Colors.green.shade100
-                              : Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          isPaid ? 'পরিশোধ হয়েছে' : 'বাকি আছে',
+                              fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text('${payment.propertyName} • রুম ${payment.roomNumber}',
                           style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: isPaid
-                                ? Colors.green.shade800
-                                : Colors.orange.shade800,
-                          ),
-                        ),
-                      ),
+                              fontSize: 12,
+                              color: color.onSurface.withOpacity(0.6))),
                     ],
                   ),
-                  if (isPaid && payment.paidAt != null)
-                    Text(
-                      'পরিশোধ: ${payment.paidAt!.day}/${payment.paidAt!.month}/${payment.paidAt!.year}',
+                ),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(int.parse(payment.statusBgColorHex, radix: 16)),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(payment.statusLabel,
                       style: TextStyle(
                           fontSize: 11,
-                          color: Colors.green.shade700),
+                          fontWeight: FontWeight.w600,
+                          color: Color(int.parse(payment.statusColorHex, radix: 16)))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Amount
+            Text('৳${payment.amount.toStringAsFixed(0)}',
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
+
+            // Submitted payment details
+            if (payment.status == PaymentStatus.submitted) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('পেমেন্টের তথ্য',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1565C0),
+                            fontSize: 13)),
+                    const SizedBox(height: 6),
+                    _infoRow('পদ্ধতি', payment.paymentMethod ?? ''),
+                    _infoRow('Transaction ID', payment.transactionId ?? ''),
+                    if (payment.note != null && payment.note!.isNotEmpty)
+                      _infoRow('নোট', payment.note!),
+                    if (payment.submittedAt != null)
+                      _infoRow('জমা দেওয়া হয়েছে',
+                          '${payment.submittedAt!.day}/${payment.submittedAt!.month}/${payment.submittedAt!.year}'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Approve / Reject buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _rejectPayment(context),
+                      icon: const Icon(Icons.close_rounded,
+                          color: Colors.red, size: 18),
+                      label: const Text('বাতিল',
+                          style: TextStyle(color: Colors.red)),
+                      style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red)),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => _approvePayment(context),
+                      icon: const Icon(Icons.check_rounded, size: 18),
+                      label: const Text('অনুমোদন'),
+                    ),
+                  ),
                 ],
               ),
-            ),
-            // Action button
-            isPaid
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red),
-                        tooltip: 'Receipt download করুন',
-                        onPressed: () => _downloadReceipt(context),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.undo_rounded, color: color.onSurface.withOpacity(0.4)),
-                        tooltip: 'বাকি হিসেবে চিহ্নিত করুন',
-                        onPressed: () async => await service.markAsPending(payment.id),
-                      ),
-                    ],
-                  )
-                : FilledButton.tonal(
-                    onPressed: () => _showMarkPaidDialog(context),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ],
+
+            // Rejection reason
+            if (payment.status == PaymentStatus.rejected &&
+                payment.rejectionReason != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: Colors.red, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('কারণ: ${payment.rejectionReason}',
+                          style: const TextStyle(
+                              color: Colors.red, fontSize: 13)),
                     ),
-                    child: const Text('পরিশোধ', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => service.markAsPending(payment.id),
+                  child: const Text('Pending এ ফিরিয়ে দিন'),
+                ),
+              ),
+            ],
+
+            // Paid info
+            if (payment.status == PaymentStatus.paid) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.check_circle_rounded,
+                      color: Colors.green.shade700, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    'পরিশোধ: ${payment.paidAt?.day}/${payment.paidAt?.month}/${payment.paidAt?.year}',
+                    style: TextStyle(
+                        fontSize: 12, color: Colors.green.shade700),
                   ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.picture_as_pdf_rounded,
+                        color: Colors.red, size: 20),
+                    onPressed: () => _downloadReceipt(context),
+                    tooltip: 'Receipt',
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.undo_rounded,
+                        color: color.onSurface.withOpacity(0.4), size: 20),
+                    onPressed: () => service.markAsPending(payment.id),
+                    tooltip: 'Pending এ নিন',
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Future<void> _showMarkPaidDialog(BuildContext context) async {
-    final noteCtrl = TextEditingController();
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Row(
+        children: [
+          Text('$label: ',
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1565C0))),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(
+                    fontSize: 12, color: Color(0xFF1565C0))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _approvePayment(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('${payment.tenantName} এর ভাড়া পরিশোধ'),
+        title: const Text('পেমেন্ট অনুমোদন'),
+        content: Text(
+            '${payment.tenantName} এর ৳${payment.amount.toStringAsFixed(0)} পেমেন্ট অনুমোদন করবেন?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('না')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('অনুমোদন করুন')),
+        ],
+      ),
+    );
+    if (confirm == true) await service.approvePayment(payment.id);
+  }
+
+  Future<void> _rejectPayment(BuildContext context) async {
+    final reasonCtrl = TextEditingController();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('পেমেন্ট বাতিল'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('পরিমাণ: ৳${payment.amount.toStringAsFixed(0)}',
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('${payment.tenantName} এর পেমেন্ট বাতিলের কারণ লিখুন:'),
             const SizedBox(height: 12),
             TextField(
-              controller: noteCtrl,
+              controller: reasonCtrl,
               decoration: const InputDecoration(
-                labelText: 'Note (optional)',
-                hintText: 'যেমন: bKash এ পেয়েছি',
+                hintText: 'যেমন: Transaction ID সঠিক নয়',
               ),
             ),
           ],
@@ -475,28 +589,24 @@ class _PaymentCard extends StatelessWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('বাতিল')),
+              child: const Text('না')),
           FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('পরিশোধ নিশ্চিত করুন')),
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('বাতিল করুন'),
+          ),
         ],
       ),
     );
-
     if (confirm == true) {
-      await service.markAsPaid(payment.id,
-          note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim());
+      await service.rejectPayment(payment.id,
+          reasonCtrl.text.trim().isEmpty
+              ? 'কারণ উল্লেখ করা হয়নি'
+              : reasonCtrl.text.trim());
     }
   }
 
   Future<void> _downloadReceipt(BuildContext context) async {
-    if (payment.status != PaymentStatus.paid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('শুধু পরিশোধিত payment এর receipt পাওয়া যাবে')),
-      );
-      return;
-    }
-
     try {
       final user = context.read<AuthService>().currentUser!;
       final pdfBytes = await PdfService.generateRentReceipt(
@@ -504,10 +614,8 @@ class _PaymentCard extends StatelessWidget {
         landlordName: user.name,
         landlordPhone: user.phone,
       );
-      await PdfService.sharePdf(
-        pdfBytes,
-        'receipt_${payment.tenantName}_${payment.month}_${payment.year}.pdf',
-      );
+      await PdfService.sharePdf(pdfBytes,
+          'receipt_${payment.tenantName}_${payment.month}_${payment.year}.pdf');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
