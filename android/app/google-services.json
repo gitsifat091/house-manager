@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "298634740911",
+    "project_id": "house-manager-bf593",
+    "storage_bucket": "house-manager-bf593.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298634740911:android:43202ac2b431885c8f805a",
+        "android_client_info": {
+          "package_name": "com.example.house_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm2yGQZoIawfGXjAZOCftLDAi6nVMUz4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
