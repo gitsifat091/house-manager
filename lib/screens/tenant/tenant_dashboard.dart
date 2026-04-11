@@ -9,6 +9,7 @@ import 'tenant_maintenance_screen.dart';
 import 'tenant_utility_screen.dart';
 import '../landlord/settings_screen.dart';
 import '../../../widgets/profile_avatar.dart';
+import '../tenant/tenant_rules_screen.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -168,6 +169,18 @@ class _TenantDrawer extends StatelessWidget {
                   ),
 
                   const _DrawerDivider(label: 'অ্যাপ'),
+
+                  // Rules
+                  _TenantDrawerItem(
+                    icon: Icons.gavel_rounded,
+                    label: 'নিয়মাবলী',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => TenantRulesScreen(user: user),
+                      ));
+                    },
+                  ),
 
                   _TenantDrawerItem(
                     icon: Icons.settings_outlined,

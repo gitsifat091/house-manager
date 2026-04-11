@@ -14,6 +14,7 @@ import 'utility_screen.dart';
 import 'archive_screen.dart';
 import 'settings_screen.dart';
 import '../../../widgets/profile_avatar.dart';
+import 'rules_screen.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({super.key});
@@ -181,6 +182,18 @@ class _AppDrawer extends StatelessWidget {
                   ),
 
                   const _DrawerDivider(label: 'অ্যাপ'),
+
+                  // Rules
+                  _DrawerItem(
+                    icon: Icons.gavel_rounded,
+                    label: 'নিয়মাবলী',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => const RulesScreen(),
+                      ));
+                    },
+                  ),
 
                   _DrawerItem(
                     icon: Icons.settings_outlined,
