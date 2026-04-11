@@ -118,21 +118,37 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.info_outline_rounded,
                 title: 'Version',
                 subtitle: 'House Manager v1.0.0',
-                onTap: () {},
+                onTap: () => showAboutDialog(
+                  context: context,
+                  applicationName: 'House Manager',
+                  applicationVersion: 'v1.0.0',
+                  applicationIcon: Container(
+                    width: 56, height: 56,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.home_rounded, color: Colors.white, size: 32),
+                  ),
+                  children: [
+                    const Text('বাড়ি ভাড়া ব্যবস্থাপনার জন্য তৈরি একটি সম্পূর্ণ সমাধান।\n'),
+                    const Text('বাড়ীওয়ালা ও ভাড়াটিয়া উভয়ের জন্য সহজ ও কার্যকর।'),
+                  ],
+                ),
               ),
 
               _SettingsTile(
                 icon: Icons.description_outlined,
                 title: 'Privacy Policy',
                 subtitle: 'আমাদের privacy policy পড়ুন',
-                onTap: () {},
+                onTap: () => _showPrivacyPolicy(context),
               ),
 
               _SettingsTile(
                 icon: Icons.star_outline_rounded,
                 title: 'App রেট করুন',
                 subtitle: 'আপনার মতামত দিন',
-                onTap: () {},
+                onTap: () => _showRateDialog(context),
               ),
 
               const SizedBox(height: 16),
@@ -370,6 +386,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _confirmLogout(BuildContext context) {
+    final auth = context.read<AuthService>();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -382,11 +399,128 @@ class SettingsScreen extends StatelessWidget {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              context.read<AuthService>().logout();
+              auth.logout();
             },
             child: const Text('হ্যাঁ'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, ctrl) => Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text('Privacy Policy',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Divider(),
+            Expanded(
+              child: ListView(
+                controller: ctrl,
+                padding: const EdgeInsets.all(20),
+                children: const [
+                  _PolicySection(
+                    title: '১. তথ্য সংগ্রহ',
+                    body: 'আমরা আপনার নাম, ফোন নম্বর, ইমেইল এবং NID নম্বর সংগ্রহ করি। এই তথ্যগুলো শুধুমাত্র বাড়ি ভাড়া ব্যবস্থাপনার জন্য ব্যবহার করা হয়।',
+                  ),
+                  _PolicySection(
+                    title: '২. তথ্য ব্যবহার',
+                    body: 'সংগৃহীত তথ্য ভাড়াটিয়া ও বাড়ীওয়ালার মধ্যে যোগাযোগ এবং পেমেন্ট ট্র্যাকিংয়ের জন্য ব্যবহৃত হয়। তৃতীয় পক্ষের সাথে কোনো তথ্য শেয়ার করা হয় না।',
+                  ),
+                  _PolicySection(
+                    title: '৩. তথ্য সুরক্ষা',
+                    body: 'আপনার সকল তথ্য Firebase এর নিরাপদ সার্ভারে এনক্রিপ্টেড আকারে সংরক্ষিত হয়। আমরা industry-standard security practices অনুসরণ করি।',
+                  ),
+                  _PolicySection(
+                    title: '৪. তথ্য মুছে ফেলা',
+                    body: 'আপনি যেকোনো সময় আপনার অ্যাকাউন্ট মুছে ফেলার অনুরোধ করতে পারেন। অ্যাকাউন্ট মুছলে সকল ব্যক্তিগত তথ্য স্থায়ীভাবে মুছে যাবে।',
+                  ),
+                  _PolicySection(
+                    title: '৫. যোগাযোগ',
+                    body: 'Privacy সংক্রান্ত যেকোনো প্রশ্নের জন্য আমাদের সাথে যোগাযোগ করুন।',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRateDialog(BuildContext context) {
+    int _rating = 0;
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('App রেট করুন'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('House Manager কেমন লাগলো?'),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) => IconButton(
+                  icon: Icon(
+                    i < _rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: Colors.amber,
+                    size: 36,
+                  ),
+                  onPressed: () => setDialogState(() => _rating = i + 1),
+                )),
+              ),
+              const SizedBox(height: 8),
+              if (_rating > 0)
+                Text(
+                  _rating == 5 ? 'অসাধারণ! 🎉' :
+                  _rating == 4 ? 'খুব ভালো! 😊' :
+                  _rating == 3 ? 'মোটামুটি 🙂' :
+                  _rating == 2 ? 'উন্নতি দরকার 😐' : 'হতাশাজনক 😞',
+                  style: const TextStyle(fontSize: 16),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('পরে'),
+            ),
+            if (_rating > 0)
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('ধন্যবাদ আপনার মতামতের জন্য! 🙏'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                child: const Text('Submit'),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -456,6 +590,31 @@ class _SettingsTile extends StatelessWidget {
                 color: color.onSurface.withOpacity(0.3)),
         onTap: enabled ? onTap : null,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      ),
+    );
+  }
+}
+
+class _PolicySection extends StatelessWidget {
+  final String title;
+  final String body;
+  const _PolicySection({required this.title, required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(
+              fontSize: 15, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text(body, style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              height: 1.6)),
+        ],
       ),
     );
   }
