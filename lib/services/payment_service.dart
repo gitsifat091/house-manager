@@ -16,8 +16,13 @@ class PaymentService {
             .map((d) => PaymentModel.fromMap(d.data(), d.id))
             .toList()
           ..sort((a, b) {
+            // Year → Month → paidAt time (latest first)
             if (a.year != b.year) return b.year.compareTo(a.year);
-            return b.month.compareTo(a.month);
+            if (a.month != b.month) return b.month.compareTo(a.month);
+            // Same month — paidAt বা submittedAt দিয়ে sort
+            final aTime = a.paidAt ?? a.submittedAt ?? DateTime(a.year, a.month);
+            final bTime = b.paidAt ?? b.submittedAt ?? DateTime(b.year, b.month);
+            return bTime.compareTo(aTime);
           }));
   }
 

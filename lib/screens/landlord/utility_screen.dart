@@ -69,70 +69,271 @@ class _UtilityScreenState extends State<UtilityScreen> {
 
           // Bill list
           Expanded(
-            child: StreamBuilder<List<UtilityModel>>(
-              stream: service.getLandlordBills(user.uid),
-              builder: (context, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final all = snap.data ?? [];
-                final bills = all.where((b) =>
-                    b.month == _selectedMonth && b.year == _selectedYear).toList();
+  child: StreamBuilder<List<UtilityModel>>(
+    stream: service.getLandlordBills(user.uid),
+    builder: (context, snap) {
+      if (snap.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final all = snap.data ?? [];
+      final bills = all.where((b) =>
+          b.month == _selectedMonth && b.year == _selectedYear).toList();
 
-                if (bills.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('💡', style: TextStyle(fontSize: 64)),
-                        const SizedBox(height: 16),
-                        const Text('এই মাসের কোনো বিল নেই',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        const Text('নিচের + বাটন দিয়ে বিল যোগ করুন'),
-                      ],
+      if (bills.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('💡', style: TextStyle(fontSize: 64)),
+              const SizedBox(height: 16),
+              const Text('এই মাসের কোনো বিল নেই',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('নিচের + বাটন দিয়ে বিল যোগ করুন'),
+            ],
+          ),
+        );
+      }
+
+      // Summary
+      final totalBills = bills.fold(0.0, (sum, b) => sum + b.amount);
+      final paidBills = bills.where((b) => b.isPaid).fold(0.0, (sum, b) => sum + b.amount);
+
+      // Group by tenant
+      final Map<String, List<UtilityModel>> grouped = {};
+      for (final bill in bills) {
+        final key = '${bill.tenantId}_${bill.tenantName}_${bill.roomNumber}';
+        grouped.putIfAbsent(key, () => []).add(bill);
+      }
+
+      return Column(
+        children: [
+          // Summary row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                Expanded(child: _StatCard(
+                  label: 'মোট বিল', value: '৳${totalBills.toStringAsFixed(0)}',
+                  color: Colors.blue, icon: Icons.receipt_outlined,
+                )),
+                const SizedBox(width: 10),
+                Expanded(child: _StatCard(
+                  label: 'পরিশোধ', value: '৳${paidBills.toStringAsFixed(0)}',
+                  color: Colors.green, icon: Icons.check_circle_outline,
+                )),
+                const SizedBox(width: 10),
+                Expanded(child: _StatCard(
+                  label: 'বাকি',
+                  value: '৳${(totalBills - paidBills).toStringAsFixed(0)}',
+                  color: Colors.orange, icon: Icons.pending_outlined,
+                )),
+              ],
+            ),
+          ),
+
+          // Grouped list
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: grouped.length,
+              itemBuilder: (ctx, i) {
+                final entry = grouped.entries.elementAt(i);
+                final tenantBills = entry.value;
+                final tenantName = tenantBills.first.tenantName;
+                final roomNumber = tenantBills.first.roomNumber;
+                final tenantTotal = tenantBills.fold(0.0, (s, b) => s + b.amount);
+                final tenantPaid = tenantBills.where((b) => b.isPaid).fold(0.0, (s, b) => s + b.amount);
+                final allPaid = tenantBills.every((b) => b.isPaid);
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: allPaid
+                          ? Colors.green.withOpacity(0.4)
+                          : Theme.of(context).colorScheme.outlineVariant,
                     ),
-                  );
-                }
-
-                // Summary
-                final totalBills = bills.fold(0.0, (sum, b) => sum + b.amount);
-                final paidBills = bills.where((b) => b.isPaid).fold(0.0, (sum, b) => sum + b.amount);
-
-                return Column(
-                  children: [
-                    // Summary row
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(child: _StatCard(
-                            label: 'মোট বিল', value: '৳${totalBills.toStringAsFixed(0)}',
-                            color: Colors.blue, icon: Icons.receipt_outlined,
-                          )),
-                          const SizedBox(width: 10),
-                          Expanded(child: _StatCard(
-                            label: 'পরিশোধ', value: '৳${paidBills.toStringAsFixed(0)}',
-                            color: Colors.green, icon: Icons.check_circle_outline,
-                          )),
-                          const SizedBox(width: 10),
-                          Expanded(child: _StatCard(
-                            label: 'বাকি',
-                            value: '৳${(totalBills - paidBills).toStringAsFixed(0)}',
-                            color: Colors.orange, icon: Icons.pending_outlined,
-                          )),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: bills.length,
-                        itemBuilder: (ctx, i) => _BillCard(
-                          bill: bills[i], service: service,
+                  ),
+                  child: Column(
+                    children: [
+                      // Tenant header
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: allPaid
+                              ? Colors.green.withOpacity(0.08)
+                              : Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16)),
                         ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              child: Text(
+                                tenantName.isNotEmpty ? tenantName[0].toUpperCase() : '?',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(tenantName,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15)),
+                                  Text('রুম $roomNumber',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6))),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('৳${tenantTotal.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15)),
+                                Text(
+                                  allPaid
+                                      ? 'সম্পূর্ণ পরিশোধ'
+                                      : 'বাকি: ৳${(tenantTotal - tenantPaid).toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: allPaid
+                                          ? Colors.green.shade700
+                                          : Colors.orange.shade700,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Bill items
+                      ...tenantBills.map((bill) => Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36, height: 36,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceVariant,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: Text(bill.typeIcon,
+                                    style: const TextStyle(fontSize: 18)),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                      child: Text(bill.typeLabel,
+                                          style: const TextStyle(fontSize: 14)),
+                                      ),
+                                      Text('৳${bill.amount.toStringAsFixed(0)}',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14)),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: bill.isPaid
+                                              ? Colors.green.shade100
+                                              : Colors.orange.shade100,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          bill.isPaid ? 'পরিশোধ' : 'বাকি',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: bill.isPaid
+                                                ? Colors.green.shade800
+                                                : Colors.orange.shade800,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      // Action buttons
+                                      bill.isPaid
+                                          ? IconButton(
+                                              icon: Icon(Icons.undo_rounded,
+                                                  size: 18,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withOpacity(0.4)),
+                                              onPressed: () =>
+                                                  service.markUnpaid(bill.id),
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                            )
+                                          : IconButton(
+                                              icon: Icon(Icons.check_circle_outline,
+                                                  size: 18,
+                                                  color: Colors.green.shade600),
+                                              onPressed: () =>
+                                                  service.markPaid(bill.id),
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                            ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline,
+                                            color: Colors.red, size: 18),
+                                        onPressed: () =>
+                                            service.deleteBill(bill.id),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+
+                                // "সব পরিশোধ" button
+                                if (!allPaid)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () async {
+                                          for (final bill in tenantBills) {
+                                            if (!bill.isPaid) {
+                                              await service.markPaid(bill.id);
+                                            }
+                                          }
+                                        },
+                                        icon: const Icon(Icons.done_all_rounded, size: 18),
+                                        label: const Text('সব পরিশোধ করুন'),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],

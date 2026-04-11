@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/room_model.dart';
 import '../../services/property_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddEditRoomScreen extends StatefulWidget {
   final String propertyId;
@@ -37,36 +38,40 @@ class _AddEditRoomScreenState extends State<AddEditRoomScreen> {
     super.dispose();
   }
 
-  // Future<void> _save() async {
-  //   if (!_formKey.currentState!.validate()) return;
-  //   setState(() => _loading = true);
-
-  //   final service = PropertyService();
-  //   final room = RoomModel(
-  //     id: widget.room?.id ?? '',
-  //     propertyId: widget.propertyId,
-  //     roomNumber: _numberCtrl.text.trim(),
-  //     type: _selectedType,
-  //     rentAmount: double.parse(_rentCtrl.text.trim()),
-  //     status: widget.room?.status ?? RoomStatus.vacant,
-  //     tenantId: widget.room?.tenantId,
-  //     tenantName: widget.room?.tenantName,
-  //   );
-
-  //   if (_isEdit) {
-  //     await service.updateRoom(room);
-  //   } else {
-  //     await service.addRoom(room);
-  //   }
-
-  //   if (mounted) Navigator.pop(context);
-  // }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
     try {
+      // ── নতুন room হলে limit check ──
+      if (!_isEdit) {
+        final existingRooms = await FirebaseFirestore.instance
+            .collection('rooms')
+            .where('propertyId', isEqualTo: widget.propertyId)
+            .get();
+
+        final propDoc = await FirebaseFirestore.instance
+            .collection('properties')
+            .doc(widget.propertyId)
+            .get();
+        final totalRooms = propDoc.data()?['totalRooms'] ?? 0;
+
+        if (existingRooms.docs.length >= totalRooms) {
+          setState(() => _loading = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('সর্বোচ্চ $totalRooms টি রুম যোগ করা যাবে।'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      // ── বাকি code same ──
       final service = PropertyService();
       final room = RoomModel(
         id: widget.room?.id ?? '',
