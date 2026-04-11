@@ -85,6 +85,7 @@ class _AddEditTenantScreenState extends State<AddEditTenantScreen> {
         roomNumber: _selectedRoom!.roomNumber,
         rentAmount: _selectedRoom!.rentAmount,
         moveInDate: DateTime.now(),
+        landlordId: widget.landlordId, 
       );
 
       await TenantService().addTenant(tenant, widget.landlordId);

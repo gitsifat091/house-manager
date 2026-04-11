@@ -12,6 +12,7 @@ class TenantModel {
   final DateTime moveInDate;
   final bool isActive;
   final bool hasEdited;
+  final String landlordId;  // ← যোগ করো
 
   TenantModel({
     required this.id,
@@ -27,6 +28,7 @@ class TenantModel {
     required this.moveInDate,
     this.isActive = true,
     this.hasEdited = false,
+    required this.landlordId,  // ← যোগ করো
   });
 
   factory TenantModel.fromMap(Map<String, dynamic> map, String id) {
@@ -44,6 +46,7 @@ class TenantModel {
       moveInDate: DateTime.fromMillisecondsSinceEpoch(map['moveInDate'] ?? 0),
       isActive: map['isActive'] ?? true,
       hasEdited: map['hasEdited'] ?? false,
+      landlordId: map['landlordId'] ?? '',  // ← যোগ করো
     );
   }
 
@@ -60,5 +63,6 @@ class TenantModel {
     'moveInDate': moveInDate.millisecondsSinceEpoch,
     'isActive': isActive,
     'hasEdited': hasEdited,
+    'landlordId': landlordId,  // ← যোগ করো
   };
 }

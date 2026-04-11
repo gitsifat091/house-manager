@@ -10,6 +10,7 @@ import 'tenant_utility_screen.dart';
 import '../landlord/settings_screen.dart';
 import '../../../widgets/profile_avatar.dart';
 import '../tenant/tenant_rules_screen.dart';
+import '../tenant/tenant_chat_screen.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -169,6 +170,18 @@ class _TenantDrawer extends StatelessWidget {
                   ),
 
                   const _DrawerDivider(label: 'অ্যাপ'),
+
+                  // Chat or Message
+                  _TenantDrawerItem(
+                    icon: Icons.chat_outlined,
+                    label: 'Messages',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => TenantChatScreen(user: user),
+                      ));
+                    },
+                  ),
 
                   // Rules
                   _TenantDrawerItem(

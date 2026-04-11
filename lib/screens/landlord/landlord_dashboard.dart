@@ -15,6 +15,7 @@ import 'archive_screen.dart';
 import 'settings_screen.dart';
 import '../../../widgets/profile_avatar.dart';
 import 'rules_screen.dart';
+import 'chat_list_screen.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({super.key});
@@ -182,6 +183,18 @@ class _AppDrawer extends StatelessWidget {
                   ),
 
                   const _DrawerDivider(label: 'অ্যাপ'),
+
+                  // Chat or Message
+                  _DrawerItem(
+                    icon: Icons.chat_outlined,
+                    label: 'Messages',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => const ChatListScreen(),
+                      ));
+                    },
+                  ),
 
                   // Rules
                   _DrawerItem(
