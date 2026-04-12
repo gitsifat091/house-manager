@@ -7,6 +7,8 @@ import '../../models/tenant_model.dart';
 import 'add_edit_tenant_screen.dart';
 import 'landlord_edit_tenant_screen.dart';
 import '../shared/notification_screen.dart';
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
@@ -313,6 +315,19 @@ class _TenantCard extends StatelessWidget {
     required this.onEdit,
   });
 
+  Future<String?> _getTenantPhoto(String email) async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+      if (snap.docs.isEmpty) return null;
+      return snap.docs.first.data()['photoUrl'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
@@ -322,14 +337,41 @@ class _TenantCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor: color.primaryContainer,
-              child: Text(
-                tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
-                    color: color.primary),
-              ),
+            // CircleAvatar(
+            //   radius: 26,
+            //   backgroundColor: color.primaryContainer,
+            //   child: Text(
+            //     tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
+            //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+            //         color: color.primary),
+            //   ),
+            // ),
+            // _TenantCard এর build এ CircleAvatar এর জায়গায়:
+
+            FutureBuilder<String?>(
+              future: _getTenantPhoto(tenant.email),
+              builder: (context, snap) {
+                final photoUrl = snap.data;
+                final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+                return CircleAvatar(
+                  radius: 26,
+                  backgroundColor: color.primaryContainer,
+                  backgroundImage: hasPhoto
+                      ? (photoUrl.startsWith('data:')
+                          ? MemoryImage(base64Decode(photoUrl.split(',').last))
+                          : NetworkImage(photoUrl) as ImageProvider)
+                      : null,
+                  child: !hasPhoto
+                      ? Text(
+                          tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: color.primary,
+                              fontSize: 18),
+                        )
+                      : null,
+                );
+              },
             ),
             const SizedBox(width: 14),
             Expanded(

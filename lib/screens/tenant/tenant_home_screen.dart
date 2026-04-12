@@ -5,6 +5,9 @@ import '../../../models/room_model.dart';
 import '../../../models/user_model.dart';
 import 'tenant_edit_profile_screen.dart';
 import '../shared/notification_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../services/auth_service.dart';
+import '../../../widgets/profile_avatar.dart';
 
 
 class TenantHomeScreen extends StatelessWidget {
@@ -103,12 +106,13 @@ class TenantHomeScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            CircleAvatar(
-                              radius: 28,
-                              backgroundColor: Colors.white24,
-                              child: Text(
-                                tenant.name[0].toUpperCase(),
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                            Consumer<AuthService>(
+                              builder: (context, auth, _) => ProfileAvatar(
+                                name: tenant.name,
+                                photoUrl: auth.currentUser?.photoUrl,
+                                userId: auth.currentUser?.uid ?? '',
+                                radius: 28,
+                                editable: false,
                               ),
                             ),
                             const SizedBox(height: 10),
