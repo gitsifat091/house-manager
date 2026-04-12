@@ -8,6 +8,24 @@ class RoomListScreen extends StatelessWidget {
   final PropertyModel property;
   const RoomListScreen({super.key, required this.property});
 
+  int _naturalCompare(String a, String b) {
+    final regExp = RegExp(r'(\D*)(\d*)');
+    final aMatches = regExp.allMatches(a).toList();
+    final bMatches = regExp.allMatches(b).toList();
+
+    for (int i = 0; i < aMatches.length && i < bMatches.length; i++) {
+      final aText = aMatches[i].group(1) ?? '';
+      final bText = bMatches[i].group(1) ?? '';
+      final aNum = int.tryParse(aMatches[i].group(2) ?? '') ?? -1;
+      final bNum = int.tryParse(bMatches[i].group(2) ?? '') ?? -1;
+
+      final textCmp = aText.compareTo(bText);
+      if (textCmp != 0) return textCmp;
+      if (aNum != bNum) return aNum.compareTo(bNum);
+    }
+    return a.compareTo(b);
+  }
+
   @override
   Widget build(BuildContext context) {
     final service = PropertyService();
@@ -17,7 +35,11 @@ class RoomListScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: StreamBuilder<List<RoomModel>>(
-        stream: service.getRooms(property.id),
+        // stream: service.getRooms(property.id),
+        stream: service.getRooms(property.id).map((rooms) {
+          rooms.sort((a, b) => _naturalCompare(a.roomNumber, b.roomNumber));
+          return rooms;
+        }),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
