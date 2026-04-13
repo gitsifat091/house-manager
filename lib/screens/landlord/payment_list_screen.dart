@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/pdf_service.dart';
 import '../shared/notification_screen.dart';
+import '../../../widgets/tenant_avatar.dart';
 
 class PaymentListScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;
@@ -356,17 +357,22 @@ class _PaymentCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
+                // CircleAvatar(
+                //   radius: 22,
+                //   backgroundColor: Color(int.parse(payment.statusBgColorHex, radix: 16)),
+                //   child: Text(
+                //     payment.tenantName.isNotEmpty
+                //         ? payment.tenantName[0].toUpperCase()
+                //         : '?',
+                //     style: TextStyle(
+                //         fontWeight: FontWeight.bold,
+                //         color: Color(int.parse(payment.statusColorHex, radix: 16))),
+                //   ),
+                // ),
+                TenantAvatar(
+                  tenantName: payment.tenantName,
+                  tenantEmail: '', // payment এ email নেই, name দিয়ে fallback
                   radius: 22,
-                  backgroundColor: Color(int.parse(payment.statusBgColorHex, radix: 16)),
-                  child: Text(
-                    payment.tenantName.isNotEmpty
-                        ? payment.tenantName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(int.parse(payment.statusColorHex, radix: 16))),
-                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/maintenance_service.dart';
 import '../../../models/maintenance_model.dart';
-import 'package:provider/provider.dart';
-import '../../../services/auth_service.dart';
-import '../shared/notification_screen.dart'; // path adjust করো
+import '../shared/notification_screen.dart'; 
+import '../../../widgets/tenant_avatar.dart';
+import 'tenant_detail_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../models/tenant_model.dart';
 
 class MaintenanceRequestsScreen extends StatelessWidget {
   const MaintenanceRequestsScreen({super.key});
@@ -46,7 +48,9 @@ class MaintenanceRequestsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: requests.length,
             itemBuilder: (ctx, i) => _MaintenanceCard(
-              req: requests[i], service: service,
+              req: requests[i], 
+              service: service,
+              landlordId: user.uid,
             ),
           );
         },
@@ -58,7 +62,13 @@ class MaintenanceRequestsScreen extends StatelessWidget {
 class _MaintenanceCard extends StatelessWidget {
   final MaintenanceModel req;
   final MaintenanceService service;
-  const _MaintenanceCard({required this.req, required this.service});
+  final String landlordId; 
+
+  const _MaintenanceCard({
+    required this.req, 
+    required this.service,
+    required this.landlordId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,11 +82,31 @@ class _MaintenanceCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: color.primaryContainer,
-                  child: Text(req.tenantName[0].toUpperCase(),
-                      style: TextStyle(color: color.primary, fontWeight: FontWeight.bold)),
+                // CircleAvatar(
+                //   radius: 20,
+                //   backgroundColor: color.primaryContainer,
+                //   child: Text(req.tenantName[0].toUpperCase(),
+                //       style: TextStyle(color: color.primary, fontWeight: FontWeight.bold)),
+                // ),
+                GestureDetector(
+                  onTap: () async {
+                    final snap = await FirebaseFirestore.instance
+                        .collection('tenants')
+                        .where('landlordId', isEqualTo: landlordId)
+                        .where('name', isEqualTo: req.tenantName)
+                        .get();
+                    if (snap.docs.isNotEmpty && context.mounted) {
+                      final tenant = TenantModel.fromMap(snap.docs.first.data(), snap.docs.first.id);
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => TenantDetailScreen(tenant: tenant),
+                      ));
+                    }
+                  },
+                  child: TenantAvatar(
+                    tenantName: req.tenantName,
+                    tenantEmail: '',
+                    radius: 20,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

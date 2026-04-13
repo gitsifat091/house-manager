@@ -6,6 +6,9 @@ import '../../../services/utility_service.dart';
 import '../../../models/utility_model.dart';
 import '../../../models/tenant_model.dart';
 import '../shared/notification_screen.dart';
+import '../../../models/tenant_model.dart';
+import '../../../widgets/tenant_avatar.dart';
+import 'tenant_detail_screen.dart';
 
 class UtilityScreen extends StatefulWidget {
   const UtilityScreen({super.key});
@@ -172,15 +175,34 @@ class _UtilityScreenState extends State<UtilityScreen> {
                         ),
                         child: Row(
                           children: [
-                            CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              child: Text(
-                                tenantName.isNotEmpty ? tenantName[0].toUpperCase() : '?',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14),
+                            // CircleAvatar(
+                            //   radius: 18,
+                            //   backgroundColor: Theme.of(context).colorScheme.primary,
+                            //   child: Text(
+                            //     tenantName.isNotEmpty ? tenantName[0].toUpperCase() : '?',
+                            //     style: const TextStyle(
+                            //         color: Colors.white,
+                            //         fontWeight: FontWeight.bold,
+                            //         fontSize: 14),
+                            //   ),
+                            // ),
+                            GestureDetector(
+                              onTap: () async {
+                                final snap = await FirebaseFirestore.instance
+                                    .collection('tenants')
+                                    .doc(tenantBills.first.tenantId)
+                                    .get();
+                                if (snap.exists && context.mounted) {
+                                  final tenant = TenantModel.fromMap(snap.data()!, snap.id);
+                                  Navigator.push(context, MaterialPageRoute(
+                                    builder: (_) => TenantDetailScreen(tenant: tenant),
+                                  ));
+                                }
+                              },
+                              child: TenantAvatar(
+                                tenantName: tenantName,
+                                tenantEmail: '',
+                                radius: 18,
                               ),
                             ),
                             const SizedBox(width: 10),

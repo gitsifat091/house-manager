@@ -22,6 +22,14 @@ class _LandlordEditTenantScreenState
       text: widget.tenant.rentAmount.toStringAsFixed(0));
   bool _saving = false;
 
+  late DateTime _moveInDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _moveInDate = widget.tenant.moveInDate;  // initState এ নিয়ে যাও
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -49,6 +57,7 @@ class _LandlordEditTenantScreenState
         'email': _emailCtrl.text.trim(),
         'nidNumber': _nidCtrl.text.trim(),
         'rentAmount': newRent,
+        'moveInDate': _moveInDate.millisecondsSinceEpoch, 
       });
 
       // Update room tenantName if name changed
@@ -167,6 +176,62 @@ class _LandlordEditTenantScreenState
                   return null;
                 },
               ),
+
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _moveInDate,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null && mounted) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(_moveInDate),
+                    );
+                    if (time != null) {
+                      setState(() {
+                        _moveInDate = DateTime(
+                          picked.year, picked.month, picked.day,
+                          time.hour, time.minute,
+                        );
+                      });
+                    }
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.surfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined, color: color.primary),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('প্রবেশের তারিখ ও সময়',
+                              style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(
+                            '${_moveInDate.day}/${_moveInDate.month}/${_moveInDate.year} '
+                            '${_moveInDate.hour.toString().padLeft(2, '0')}:'
+                            '${_moveInDate.minute.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.edit_rounded, size: 16, color: Colors.grey),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 32),
 
               SizedBox(

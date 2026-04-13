@@ -9,6 +9,8 @@ import 'landlord_edit_tenant_screen.dart';
 import '../shared/notification_screen.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../widgets/tenant_avatar.dart';
+import 'tenant_detail_screen.dart';
 
 // import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
@@ -331,8 +333,16 @@ class _TenantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    return GestureDetector(                          // ← এটা যোগ করো
+    onTap: () => Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TenantDetailScreen(tenant: tenant),
+      ),
+    ),
+    child: Card(                                   // ← আগে শুধু Card ছিল
+      margin: const EdgeInsets.only(bottom: 12),  
+      
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -348,30 +358,37 @@ class _TenantCard extends StatelessWidget {
             // ),
             // _TenantCard এর build এ CircleAvatar এর জায়গায়:
 
-            FutureBuilder<String?>(
-              future: _getTenantPhoto(tenant.email),
-              builder: (context, snap) {
-                final photoUrl = snap.data;
-                final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
-                return CircleAvatar(
-                  radius: 26,
-                  backgroundColor: color.primaryContainer,
-                  backgroundImage: hasPhoto
-                      ? (photoUrl.startsWith('data:')
-                          ? MemoryImage(base64Decode(photoUrl.split(',').last))
-                          : NetworkImage(photoUrl) as ImageProvider)
-                      : null,
-                  child: !hasPhoto
-                      ? Text(
-                          tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: color.primary,
-                              fontSize: 18),
-                        )
-                      : null,
-                );
-              },
+            // FutureBuilder<String?>(
+            //   future: _getTenantPhoto(tenant.email),
+            //   builder: (context, snap) {
+            //     final photoUrl = snap.data;
+            //     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+            //     return CircleAvatar(
+            //       radius: 26,
+            //       backgroundColor: color.primaryContainer,
+            //       backgroundImage: hasPhoto
+            //           ? (photoUrl.startsWith('data:')
+            //               ? MemoryImage(base64Decode(photoUrl.split(',').last))
+            //               : NetworkImage(photoUrl) as ImageProvider)
+            //           : null,
+            //       child: !hasPhoto
+            //           ? Text(
+            //               tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
+            //               style: TextStyle(
+            //                   fontWeight: FontWeight.bold,
+            //                   color: color.primary,
+            //                   fontSize: 18),
+            //             )
+            //           : null,
+            //     );
+            //   },
+            // ),
+            
+            // FutureBuilder পুরোটা সরাও, এটা দাও:
+            TenantAvatar(
+              tenantName: tenant.name,
+              tenantEmail: tenant.email,
+              radius: 26,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -428,7 +445,7 @@ class _TenantCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),);
   }
 
   Widget _chip(BuildContext context, IconData icon, String label) {
