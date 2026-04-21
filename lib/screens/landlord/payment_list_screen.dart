@@ -87,7 +87,23 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded),
-          onPressed: () => widget.scaffoldKey?.currentState?.openDrawer(),
+          // onPressed: () => widget.scaffoldKey?.currentState?.openDrawer(),
+
+          onPressed: () {
+          final now = DateTime.now();
+          if (_selectedYear > now.year ||
+              (_selectedYear == now.year && _selectedMonth > now.month)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('ভবিষ্যৎ মাসের payment তৈরি করা যাবে না'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+          _generatePayments(user.uid);
+        },
+
         ),
         title: const Text('ভাড়া সংগ্রহ'),
         centerTitle: true,

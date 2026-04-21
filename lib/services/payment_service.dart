@@ -119,8 +119,25 @@ class PaymentService {
 
   Future<void> generateMonthlyPayments(
       String landlordId, List<TenantModel> tenants, int month, int year) async {
+    
+    // Future month এ payment তৈরি করা যাবে না
+    final now = DateTime.now();
+    final selectedMonth = DateTime(year, month);
+    final currentMonth = DateTime(now.year, now.month);
+    if (selectedMonth.isAfter(currentMonth)) {
+      return; // Future month — skip
+    }
+    
     final batch = _db.batch();
     for (final tenant in tenants) {
+
+      // Tenant যে মাসে join করেছে তার আগে payment তৈরি করা যাবে না
+      final moveIn = tenant.moveInDate;
+      final moveInMonth = DateTime(moveIn.year, moveIn.month);
+      if (selectedMonth.isBefore(moveInMonth)) {
+        continue; // এই tenant এর আগে join করেনি — skip
+      }
+
       final existing = await _db
           .collection('payments')
           .where('tenantId', isEqualTo: tenant.id)

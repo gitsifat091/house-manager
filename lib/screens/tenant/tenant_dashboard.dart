@@ -90,17 +90,7 @@ class _TenantDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // CircleAvatar(
-                  //   radius: 32,
-                  //   backgroundColor: Colors.white24,
-                  //   child: Text(
-                  //     user.name.isNotEmpty ? user.name[0].toUpperCase() : 'T',
-                  //     style: const TextStyle(
-                  //         fontSize: 28,
-                  //         fontWeight: FontWeight.bold,
-                  //         color: Colors.white),
-                  //   ),
-                  // ),
+                  
                   Consumer<AuthService>(
                     builder: (context, auth, _) => ProfileAvatar(
                       name: auth.currentUser?.name ?? user.name,
@@ -152,7 +142,7 @@ class _TenantDrawer extends StatelessWidget {
                     },
                   ),
 
-                  const _DrawerDivider(label: 'অতিরিক্ত'),
+                  const _DrawerDivider(label: 'বিলসমূহ'),
 
                   // Utility bills
                   _TenantDrawerItem(

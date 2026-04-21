@@ -81,17 +81,53 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
     final uid = _auth.currentUser!.uid;
 
     return Scaffold(
+      // appBar: AppBar(
+      //   title: Column(
+      //     crossAxisAlignment: CrossAxisAlignment.start,
+      //     children: [
+      //       Text(widget.propertyName,
+      //         style: const TextStyle(
+      //           fontSize: 18,           // size চাইলে adjust করো
+      //           fontWeight: FontWeight.bold,  // 👈 bold করার জন্য
+      //           color: Colors.white,    // 👈 এখানে color change করো
+      //         ),
+      //       ),
+      //       const Text('Community Chat',
+      //           style: TextStyle(fontSize: 12, color: Colors.white70)),
+      //     ],
+      //   ),
+      //   backgroundColor: Colors.blue,
+      // ),
+
       appBar: AppBar(
+        backgroundColor: Colors.blue,
+        elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.propertyName),
-            const Text('Community Chat',
-                style: TextStyle(fontSize: 12, color: Colors.white70)),
+            Text(
+              widget.propertyName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            const Text(
+              'Community Chat',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white70,
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.indigo,
       ),
+
       body: Column(
         children: [
           Expanded(
@@ -148,8 +184,8 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
         ),
         decoration: BoxDecoration(
           color: isMe
-              ? Colors.indigo
-              : (isLandlord ? Colors.orange.shade100 : Colors.grey.shade200),
+              ? Colors.blue
+              : (isLandlord ? Colors.grey.shade100 : Colors.grey.shade200),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -170,7 +206,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isLandlord ? Colors.orange.shade800 : Colors.grey.shade700,
+                      color: isLandlord ? Colors.black : Colors.grey.shade700,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -178,7 +214,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: Colors.orange,
+                        color: Colors.grey,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text('বাড়ীওয়ালা',
@@ -236,7 +272,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
           ),
           const SizedBox(width: 8),
           CircleAvatar(
-            backgroundColor: Colors.indigo,
+            backgroundColor: Colors.blue.shade700,
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white, size: 18),
               onPressed: _sendMessage,
