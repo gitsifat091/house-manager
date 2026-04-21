@@ -16,6 +16,7 @@ import 'settings_screen.dart';
 import '../../../widgets/profile_avatar.dart';
 import 'rules_screen.dart';
 import 'chat_list_screen.dart';
+import '../community/community_chat_screen.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({super.key});
@@ -95,15 +96,7 @@ class _AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // CircleAvatar(
-                  //   radius: 32,
-                  //   backgroundColor: Colors.white24,
-                  //   child: Text(
-                  //     user.name.isNotEmpty ? user.name[0].toUpperCase() : 'L',
-                  //     style: const TextStyle(
-                  //         fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                  //   ),
-                  // ),
+                  
                   Consumer<AuthService>(
                     builder: (context, auth, _) => ProfileAvatar(
                       name: auth.currentUser?.name ?? user.name,
@@ -623,6 +616,22 @@ class _PropertyCard extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // Row এর children এ, PopupMenuButton এর আগে:
+              IconButton(
+                icon: const Icon(Icons.forum_outlined, color: Colors.indigo),
+                tooltip: 'Community Chat',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CommunityChatScreen(
+                      propertyId: property.id,
+                      propertyName: property.name,
+                    ),
+                  ),
+                ),
+              ),
+
               PopupMenuButton(
                 itemBuilder: (_) => [
                   const PopupMenuItem(value: 'edit', child: Text('Edit')),

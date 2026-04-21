@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
@@ -11,6 +10,7 @@ import '../landlord/settings_screen.dart';
 import '../../../widgets/profile_avatar.dart';
 import '../tenant/tenant_rules_screen.dart';
 import '../tenant/tenant_chat_screen.dart';
+import 'tenant_community_screen.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -117,8 +117,8 @@ class _TenantDrawer extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: Colors.white)),
                   Text(user.email,
-                      style: const TextStyle(
-                          fontSize: 13, color: Colors.white70)),
+                      style:
+                          const TextStyle(fontSize: 13, color: Colors.white70)),
                   const SizedBox(height: 4),
                   Container(
                     padding:
@@ -147,8 +147,7 @@ class _TenantDrawer extends StatelessWidget {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                _TenantProfileScreen(user: user),
+                            builder: (_) => _TenantProfileScreen(user: user),
                           ));
                     },
                   ),
@@ -177,9 +176,25 @@ class _TenantDrawer extends StatelessWidget {
                     label: 'Messages',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => TenantChatScreen(user: user),
-                      ));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TenantChatScreen(user: user),
+                          ));
+                    },
+                  ),
+
+                  _TenantDrawerItem(
+                    icon: Icons.forum_outlined,
+                    label: 'Community Chat',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                TenantCommunityChatScreen(user: user),
+                          ));
                     },
                   ),
 
@@ -189,9 +204,11 @@ class _TenantDrawer extends StatelessWidget {
                     label: 'নিয়মাবলী',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => TenantRulesScreen(user: user),
-                      ));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TenantRulesScreen(user: user),
+                          ));
                     },
                   ),
 
@@ -226,8 +243,7 @@ class _TenantDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text('House Manager v1.0',
-                  style: TextStyle(
-                      fontSize: 12, color: Colors.grey.shade500)),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
             ),
           ],
         ),
@@ -243,8 +259,7 @@ class _TenantDrawer extends StatelessWidget {
         content: const Text('আপনি কি logout করতে চান?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('না')),
+              onPressed: () => Navigator.pop(context), child: const Text('না')),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
@@ -287,12 +302,11 @@ class _TenantProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(user.name,
-                style: const TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.bold)),
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: color.primaryContainer,
                 borderRadius: BorderRadius.circular(20),
@@ -302,12 +316,9 @@ class _TenantProfileScreen extends StatelessWidget {
                       color: color.primary, fontWeight: FontWeight.w500)),
             ),
             const SizedBox(height: 32),
-
             _profileRow(context, Icons.email_outlined, 'Email', user.email),
             _profileRow(context, Icons.phone_outlined, 'Phone', user.phone),
-
             const SizedBox(height: 32),
-
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -317,8 +328,8 @@ class _TenantProfileScreen extends StatelessWidget {
                   context.read<AuthService>().logout();
                 },
                 icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                label: const Text('Logout',
-                    style: TextStyle(color: Colors.red)),
+                label:
+                    const Text('Logout', style: TextStyle(color: Colors.red)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.red),
                   shape: RoundedRectangleBorder(
@@ -352,8 +363,7 @@ class _TenantProfileScreen extends StatelessWidget {
             children: [
               Text(label,
                   style: TextStyle(
-                      fontSize: 12,
-                      color: color.onSurface.withOpacity(0.5))),
+                      fontSize: 12, color: color.onSurface.withOpacity(0.5))),
               Text(value,
                   style: const TextStyle(
                       fontSize: 15, fontWeight: FontWeight.w500)),
@@ -384,14 +394,12 @@ class _TenantDrawerItem extends StatelessWidget {
     final c = color ?? Theme.of(context).colorScheme.onSurface;
     return ListTile(
       leading: Icon(icon, color: c, size: 22),
-      title: Text(label,
-          style: TextStyle(color: c, fontWeight: FontWeight.w500)),
+      title:
+          Text(label, style: TextStyle(color: c, fontWeight: FontWeight.w500)),
       onTap: onTap,
       horizontalTitleGap: 8,
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
     );
   }
 }

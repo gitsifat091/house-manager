@@ -150,7 +150,7 @@ class _AddEditTenantScreenState extends State<AddEditTenantScreen> {
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: 'Email (optional)',
+                        labelText: 'Email',
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                     ),

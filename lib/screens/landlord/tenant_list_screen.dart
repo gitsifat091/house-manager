@@ -12,14 +12,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../widgets/tenant_avatar.dart';
 import 'tenant_detail_screen.dart';
 
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import '../../services/auth_service.dart';
-// import '../../services/tenant_service.dart';
-// import '../../models/tenant_model.dart';
-// import 'add_edit_tenant_screen.dart';
-// import 'landlord_edit_tenant_screen.dart';
-// import '../shared/notification_screen.dart';
 
 enum TenantSortOrder { newest, roomNumber }
 
