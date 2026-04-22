@@ -297,6 +297,28 @@ class _RentInfoCard extends StatelessWidget {
   }
 }
 
+// class _InfoRow extends StatelessWidget {
+//   final IconData icon;
+//   final String label;
+//   final String value;
+//   const _InfoRow({required this.icon, required this.label, required this.value});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.only(bottom: 12),
+//       child: Row(
+//         children: [
+//           Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+//           const SizedBox(width: 12),
+//           Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w500)),
+//           Expanded(child: Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)))),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -305,14 +327,41 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    final color = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.outlineVariant.withOpacity(0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: color.primary),
+          ),
           const SizedBox(width: 12),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w500)),
-          Expanded(child: Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)))),
+          Text('$label',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: color.onSurface.withOpacity(0.5))),
+          const Spacer(),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );
