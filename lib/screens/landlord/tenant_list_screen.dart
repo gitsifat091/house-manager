@@ -233,71 +233,7 @@ class _TenantListScreenState extends State<TenantListScreen> {
     );
   }
 }
-// class TenantListScreen extends StatelessWidget {
-//   final GlobalKey<ScaffoldState>? scaffoldKey;
-//   const TenantListScreen({super.key, this.scaffoldKey});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final user = context.read<AuthService>().currentUser!;
-//     final tenantService = TenantService();
-
-//     return Scaffold(
-//       appBar: AppBar(
-//         leading: IconButton(
-//           icon: const Icon(Icons.menu_rounded),
-//           onPressed: () => scaffoldKey?.currentState?.openDrawer(),
-//         ),
-//         title: const Text('ভাড়াটিয়া তালিকা'),
-//         centerTitle: true,
-//       ),
-//       body: StreamBuilder<List<TenantModel>>(
-//         stream: tenantService.getTenants(user.uid),
-//         builder: (context, snap) {
-//           if (snap.connectionState == ConnectionState.waiting) {
-//             return const Center(child: CircularProgressIndicator());
-//           }
-//           final tenants = (snap.data ?? [])
-//               .where((t) => t.isActive)
-//               .toList();
-
-//           if (tenants.isEmpty) {
-//             return Center(
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   Icon(Icons.people_outline, size: 80,
-//                       color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-//                   const SizedBox(height: 16),
-//                   const Text('কোনো ভাড়াটিয়া নেই',
-//                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-//                   const SizedBox(height: 8),
-//                   const Text('নিচের বাটন দিয়ে ভাড়াটিয়া যোগ করুন'),
-//                 ],
-//               ),
-//             );
-//           }
-
-//           return ListView.builder(
-//             padding: const EdgeInsets.all(16),
-//             itemCount: tenants.length,
-//             itemBuilder: (ctx, i) => _TenantCard(
-//               tenant: tenants[i],
-//               service: tenantService,
-//             ),
-//           );
-//         },
-//       ),
-//       floatingActionButton: FloatingActionButton.extended(
-//         onPressed: () => Navigator.push(context, MaterialPageRoute(
-//           builder: (_) => AddEditTenantScreen(landlordId: user.uid),
-//         )),
-//         icon: const Icon(Icons.person_add_rounded),
-//         label: const Text('ভাড়াটিয়া যোগ করুন'),
-//       ),
-//     );
-//   }
-// }
 
 class _TenantCard extends StatelessWidget {
   final TenantModel tenant;
@@ -325,135 +261,165 @@ class _TenantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
-    return GestureDetector(                          // ← এটা যোগ করো
-    onTap: () => Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TenantDetailScreen(tenant: tenant),
-      ),
-    ),
-    child: Card(                                   // ← আগে শুধু Card ছিল
-      margin: const EdgeInsets.only(bottom: 12),  
-      
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // CircleAvatar(
-            //   radius: 26,
-            //   backgroundColor: color.primaryContainer,
-            //   child: Text(
-            //     tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
-            //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
-            //         color: color.primary),
-            //   ),
-            // ),
-            // _TenantCard এর build এ CircleAvatar এর জায়গায়:
 
-            // FutureBuilder<String?>(
-            //   future: _getTenantPhoto(tenant.email),
-            //   builder: (context, snap) {
-            //     final photoUrl = snap.data;
-            //     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
-            //     return CircleAvatar(
-            //       radius: 26,
-            //       backgroundColor: color.primaryContainer,
-            //       backgroundImage: hasPhoto
-            //           ? (photoUrl.startsWith('data:')
-            //               ? MemoryImage(base64Decode(photoUrl.split(',').last))
-            //               : NetworkImage(photoUrl) as ImageProvider)
-            //           : null,
-            //       child: !hasPhoto
-            //           ? Text(
-            //               tenant.name.isNotEmpty ? tenant.name[0].toUpperCase() : '?',
-            //               style: TextStyle(
-            //                   fontWeight: FontWeight.bold,
-            //                   color: color.primary,
-            //                   fontSize: 18),
-            //             )
-            //           : null,
-            //     );
-            //   },
-            // ),
-            
-            // FutureBuilder পুরোটা সরাও, এটা দাও:
-            TenantAvatar(
-              tenantName: tenant.name,
-              tenantEmail: tenant.email,
-              radius: 26,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: color.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: color.primary.withOpacity(0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TenantDetailScreen(tenant: tenant),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(tenant.name,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  Text(tenant.phone,
-                      style: TextStyle(fontSize: 13, color: color.onSurface.withOpacity(0.6))),
-                  const SizedBox(height: 6),
-                  Row(
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                // Avatar with green ring
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color.primary.withOpacity(0.4), width: 2),
+                  ),
+                  child: TenantAvatar(
+                    tenantName: tenant.name,
+                    tenantEmail: tenant.email,
+                    radius: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _chip(context, Icons.home_outlined, tenant.propertyName),
-                      const SizedBox(width: 6),
-                      _chip(context, Icons.door_front_door_outlined, 'রুম ${tenant.roomNumber}'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              tenant.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // Rent badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: color.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '৳${tenant.rentAmount.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: color.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        tenant.phone,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: color.onSurface.withOpacity(0.55),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _chip(context, Icons.home_outlined, tenant.propertyName),
+                          const SizedBox(width: 6),
+                          _chip(context, Icons.door_front_door_outlined, 'রুম ${tenant.roomNumber}'),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text('৳${tenant.rentAmount.toStringAsFixed(0)}/মাস',
-                      style: TextStyle(fontSize: 13, color: color.primary,
-                          fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-            PopupMenuButton(
-              itemBuilder: (_) => [
-                const PopupMenuItem(value: 'edit', child: Text('তথ্য সম্পাদনা')),  // ← নতুন
-                const PopupMenuItem(value: 'remove',
-                    child: Text('রুম খালি করুন', style: TextStyle(color: Colors.orange))),
-                const PopupMenuItem(value: 'delete',
-                    child: Text('Delete', style: TextStyle(color: Colors.red))),
+                ),
+
+                // Menu
+                PopupMenuButton(
+                  icon: Icon(Icons.more_vert_rounded,
+                      color: color.onSurface.withOpacity(0.45)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(value: 'edit', child: Text('তথ্য সম্পাদনা')),
+                    const PopupMenuItem(
+                      value: 'remove',
+                      child: Text('রুম খালি করুন',
+                          style: TextStyle(color: Colors.orange)),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete',
+                          style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                  onSelected: (val) async {
+                    if (val == 'edit') onEdit();
+                    if (val == 'remove') {
+                      final confirm = await _confirm(context,
+                          'রুম খালি করবেন?', '${tenant.name} কে রুম থেকে সরানো হবে।');
+                      if (confirm) await service.removeTenant(tenant);
+                    }
+                    if (val == 'delete') {
+                      final confirm = await _confirm(context,
+                          'Delete করবেন?', '${tenant.name} এর সব তথ্য মুছে যাবে।');
+                      if (confirm) await service.deleteTenant(tenant);
+                    }
+                  },
+                ),
               ],
-              onSelected: (val) async {
-                // if (val == 'edit') {
-                //   Navigator.push(context, MaterialPageRoute(
-                //     builder: (_) => LandlordEditTenantScreen(tenant: tenant),
-                //   ));
-                // }
-                if (val == 'edit') onEdit();
-                if (val == 'remove') {
-                  final confirm = await _confirm(context,
-                      'রুম খালি করবেন?', '${tenant.name} কে রুম থেকে সরানো হবে।');
-                  if (confirm) await service.removeTenant(tenant);
-                }
-                if (val == 'delete') {
-                  final confirm = await _confirm(context,
-                      'Delete করবেন?', '${tenant.name} এর সব তথ্য মুছে যাবে।');
-                  if (confirm) await service.deleteTenant(tenant);
-                }
-              },
             ),
-          ],
+          ),
         ),
       ),
-    ),);
+    );
   }
+
+
 
   Widget _chip(BuildContext context, IconData icon, String label) {
     final color = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: color.surfaceVariant,
+        color: color.primaryContainer.withOpacity(0.6),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color.onSurfaceVariant),
+          Icon(icon, size: 12, color: color.primary),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: color.onSurfaceVariant)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11,
+                  color: color.primary,
+                  fontWeight: FontWeight.w500)),
         ],
       ),
     );

@@ -14,6 +14,10 @@ class UtilityModel {
   final int year;
   final bool isPaid;
   final DateTime createdAt;
+  // existing fields এর সাথে যোগ করো:
+  final bool isSubmitted;
+  final String? submissionNote;
+  final String? paymentMethod;
 
   UtilityModel({
     required this.id,
@@ -29,6 +33,9 @@ class UtilityModel {
     required this.year,
     this.isPaid = false,
     required this.createdAt,
+    this.isSubmitted = false,
+    this.submissionNote,
+    this.paymentMethod,
   });
 
   factory UtilityModel.fromMap(Map<String, dynamic> map, String id) {
@@ -53,6 +60,9 @@ class UtilityModel {
       year: map['year'] ?? DateTime.now().year,
       isPaid: map['isPaid'] ?? false,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
+      isSubmitted: map['isSubmitted'] ?? false,
+      submissionNote: map['submissionNote'],
+      paymentMethod: map['paymentMethod'],
     );
   }
 
@@ -75,6 +85,9 @@ class UtilityModel {
     'year': year,
     'isPaid': isPaid,
     'createdAt': createdAt.millisecondsSinceEpoch,
+    'isSubmitted': isSubmitted,
+    'submissionNote': submissionNote,
+    'paymentMethod': paymentMethod,
   };
 
   String get typeLabel {

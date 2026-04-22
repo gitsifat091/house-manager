@@ -569,17 +569,40 @@ class _BillCard extends StatelessWidget {
                       Text('৳${bill.amount.toStringAsFixed(0)}',
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                       const SizedBox(width: 8),
+                      // Container(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      //   decoration: BoxDecoration(
+                      //     color: bill.isPaid ? Colors.green.shade100 : Colors.orange.shade100,
+                      //     borderRadius: BorderRadius.circular(20),
+                      //   ),
+                      //   child: Text(
+                      //     bill.isPaid ? 'পরিশোধ' : 'বাকি',
+                      //     style: TextStyle(
+                      //       fontSize: 11, fontWeight: FontWeight.w500,
+                      //       color: bill.isPaid ? Colors.green.shade800 : Colors.orange.shade800,
+                      //     ),
+                      //   ),
+                      // ),
+                      // _BillCard এ status pill:
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: bill.isPaid ? Colors.green.shade100 : Colors.orange.shade100,
+                          color: bill.isPaid
+                              ? Colors.green.shade100
+                              : bill.isSubmitted
+                                  ? Colors.blue.shade100
+                                  : Colors.orange.shade100,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          bill.isPaid ? 'পরিশোধ' : 'বাকি',
+                          bill.isPaid ? 'পরিশোধ' : bill.isSubmitted ? 'যাচাই চলছে' : 'বাকি',
                           style: TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w500,
-                            color: bill.isPaid ? Colors.green.shade800 : Colors.orange.shade800,
+                            color: bill.isPaid
+                                ? Colors.green.shade800
+                                : bill.isSubmitted
+                                    ? Colors.blue.shade800
+                                    : Colors.orange.shade800,
                           ),
                         ),
                       ),
@@ -588,22 +611,65 @@ class _BillCard extends StatelessWidget {
                 ],
               ),
             ),
+            // Column(
+            //   children: [
+            //     bill.isPaid
+            //         ? IconButton(
+            //             icon: Icon(Icons.undo_rounded, color: color.onSurface.withOpacity(0.4)),
+            //             onPressed: () => service.markUnpaid(bill.id),
+            //           )
+            //         : FilledButton.tonal(
+            //             onPressed: () => service.markPaid(bill.id),
+            //             style: FilledButton.styleFrom(
+            //                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
+            //             child: const Text('পরিশোধ', style: TextStyle(fontSize: 12)),
+            //           ),
+            //     IconButton(
+            //       icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+            //       onPressed: () => service.deleteBill(bill.id),
+            //     ),
+            //   ],
+            // ),
+            // Replace করো:
             Column(
               children: [
                 bill.isPaid
                     ? IconButton(
-                        icon: Icon(Icons.undo_rounded, color: color.onSurface.withOpacity(0.4)),
+                        icon: Icon(Icons.undo_rounded,
+                            size: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                         onPressed: () => service.markUnpaid(bill.id),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       )
-                    : FilledButton.tonal(
-                        onPressed: () => service.markPaid(bill.id),
-                        style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
-                        child: const Text('পরিশোধ', style: TextStyle(fontSize: 12)),
-                      ),
+                    : bill.isSubmitted
+                        // যাচাইয়ের অপেক্ষায় — approve/reject
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.close_rounded, color: Colors.red, size: 18),
+                                onPressed: () => service.rejectBill(bill.id),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                tooltip: 'বাতিল',
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.check_circle_outline_rounded,
+                                    color: Colors.green, size: 18),
+                                onPressed: () => service.approveBill(bill.id),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                tooltip: 'অনুমোদন',
+                              ),
+                            ],
+                          )
+                        // Pending — কোনো action নেই (tenant submit করবে)
+                        : const SizedBox(width: 36),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
                   onPressed: () => service.deleteBill(bill.id),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ],
             ),

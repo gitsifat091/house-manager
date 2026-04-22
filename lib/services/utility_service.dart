@@ -47,4 +47,33 @@ class UtilityService {
   Future<void> deleteBill(String id) async {
     await _db.collection('utilities').doc(id).delete();
   }
+
+  // Tenant bill submit করবে
+  Future<void> submitBill(String id, {
+    required String paymentMethod,
+    String? note,
+  }) async {
+    await _db.collection('utilities').doc(id).update({
+      'isSubmitted': true,
+      'paymentMethod': paymentMethod,
+      'submissionNote': note,
+    });
+  }
+
+  // Landlord approve করবে
+  Future<void> approveBill(String id) async {
+    await _db.collection('utilities').doc(id).update({
+      'isPaid': true,
+      'isSubmitted': false,
+    });
+  }
+
+  // Landlord reject করবে
+  Future<void> rejectBill(String id) async {
+    await _db.collection('utilities').doc(id).update({
+      'isSubmitted': false,
+      'paymentMethod': null,
+      'submissionNote': null,
+    });
+  }
 }
