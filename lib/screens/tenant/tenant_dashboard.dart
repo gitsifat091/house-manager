@@ -265,6 +265,164 @@ class _TenantDrawer extends StatelessWidget {
 
 // ── Tenant Profile Screen ─────────────────────────────────────────────────
 
+// class _TenantProfileScreen extends StatelessWidget {
+//   final dynamic user;
+//   const _TenantProfileScreen({required this.user});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final color = Theme.of(context).colorScheme;
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('আমার প্রোফাইল'), centerTitle: true),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(24),
+//         child: Column(
+//           children: [
+//             const SizedBox(height: 16),
+//             CircleAvatar(
+//               radius: 52,
+//               backgroundColor: color.primaryContainer,
+//               child: Text(
+//                 user.name.isNotEmpty ? user.name[0].toUpperCase() : 'T',
+//                 style: TextStyle(
+//                     fontSize: 44,
+//                     fontWeight: FontWeight.bold,
+//                     color: color.primary),
+//               ),
+//             ),
+//             const SizedBox(height: 16),
+//             Text(user.name,
+//                 style:
+//                     const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+//             const SizedBox(height: 4),
+//             Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+//               decoration: BoxDecoration(
+//                 color: color.primaryContainer,
+//                 borderRadius: BorderRadius.circular(20),
+//               ),
+//               child: Text('ভাড়াটিয়া',
+//                   style: TextStyle(
+//                       color: color.primary, fontWeight: FontWeight.w500)),
+//             ),
+//             const SizedBox(height: 32),
+//             _profileRow(context, Icons.email_outlined, 'Email', user.email),
+//             _profileRow(context, Icons.phone_outlined, 'Phone', user.phone),
+//             const SizedBox(height: 32),
+//             SizedBox(
+//               width: double.infinity,
+//               height: 50,
+//               child: OutlinedButton.icon(
+//                 onPressed: () {
+//                   Navigator.pop(context);
+//                   context.read<AuthService>().logout();
+//                 },
+//                 icon: const Icon(Icons.logout_rounded, color: Colors.red),
+//                 label:
+//                     const Text('Logout', style: TextStyle(color: Colors.red)),
+//                 style: OutlinedButton.styleFrom(
+//                   side: const BorderSide(color: Colors.red),
+//                   shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(14)),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _profileRow(
+//       BuildContext context, IconData icon, String label, String value) {
+//     final color = Theme.of(context).colorScheme;
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 12),
+//       padding: const EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: color.surface,
+//         borderRadius: BorderRadius.circular(14),
+//         border: Border.all(color: color.outlineVariant),
+//       ),
+//       child: Row(
+//         children: [
+//           Icon(icon, color: color.primary, size: 22),
+//           const SizedBox(width: 14),
+//           Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(label,
+//                   style: TextStyle(
+//                       fontSize: 12, color: color.onSurface.withOpacity(0.5))),
+//               Text(value,
+//                   style: const TextStyle(
+//                       fontSize: 15, fontWeight: FontWeight.w500)),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+class _InfoTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final ColorScheme color;
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.outlineVariant.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color.primary, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: color.onSurface.withOpacity(0.5))),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TenantProfileScreen extends StatelessWidget {
   final dynamic user;
   const _TenantProfileScreen({required this.user});
@@ -273,91 +431,125 @@ class _TenantProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('আমার প্রোফাইল'), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            CircleAvatar(
-              radius: 52,
-              backgroundColor: color.primaryContainer,
-              child: Text(
-                user.name.isNotEmpty ? user.name[0].toUpperCase() : 'T',
-                style: TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.bold,
-                    color: color.primary),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(user.name,
-                style:
-                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.primaryContainer,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text('ভাড়াটিয়া',
-                  style: TextStyle(
-                      color: color.primary, fontWeight: FontWeight.w500)),
-            ),
-            const SizedBox(height: 32),
-            _profileRow(context, Icons.email_outlined, 'Email', user.email),
-            _profileRow(context, Icons.phone_outlined, 'Phone', user.phone),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.read<AuthService>().logout();
-                },
-                icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                label:
-                    const Text('Logout', style: TextStyle(color: Colors.red)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            backgroundColor: color.primary,
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: const Text('আমার প্রোফাইল',
+                style: TextStyle(color: Colors.white, fontSize: 16)),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [color.primary, color.primary.withOpacity(0.75)],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 32),
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border:
+                              Border.all(color: Colors.white, width: 2.5),
+                        ),
+                        child: CircleAvatar(
+                          radius: 44,
+                          backgroundColor: Colors.white24,
+                          child: Text(
+                            user.name.isNotEmpty
+                                ? user.name[0].toUpperCase()
+                                : 'T',
+                            style: const TextStyle(
+                                fontSize: 38,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(user.name,
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      const SizedBox(height: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('ভাড়াটিয়া',
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.white)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _profileRow(
-      BuildContext context, IconData icon, String label, String value) {
-    final color = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color.primary, size: 22),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 12, color: color.onSurface.withOpacity(0.5))),
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w500)),
-            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('যোগাযোগের তথ্য',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: color.primary,
+                          letterSpacing: 0.5)),
+                  const SizedBox(height: 10),
+                  _InfoTile(
+                    icon: Icons.email_outlined,
+                    label: 'Email',
+                    value: user.email,
+                    color: color,
+                  ),
+                  const SizedBox(height: 10),
+                  _InfoTile(
+                    icon: Icons.phone_outlined,
+                    label: 'Phone',
+                    value: user.phone,
+                    color: color,
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.read<AuthService>().logout();
+                      },
+                      icon: const Icon(Icons.logout_rounded,
+                          color: Colors.red),
+                      label: const Text('Logout',
+                          style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
