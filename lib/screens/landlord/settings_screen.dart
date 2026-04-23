@@ -764,17 +764,16 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  // Log Out 
   void _confirmLogout(BuildContext context) {
     final auth = context.read<AuthService>();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Logout করবেন?',
             style: TextStyle(fontWeight: FontWeight.w700)),
-        content:
-            const Text('আপনি কি নিশ্চিতভাবে logout করতে চান?'),
+        content: const Text('আপনি কি নিশ্চিতভাবে logout করতে চান?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -782,7 +781,8 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context); // dialog বন্ধ
+              Navigator.of(context).popUntil((route) => route.isFirst); // ✅ stack clear
               auth.logout();
             },
             child: const Text('হ্যাঁ, Logout'),
@@ -791,6 +791,34 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
     );
   }
+
+  // void _confirmLogout(BuildContext context) {
+  //   final auth = context.read<AuthService>();
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //       shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(16)),
+  //       title: const Text('Logout করবেন?',
+  //           style: TextStyle(fontWeight: FontWeight.w700)),
+  //       content:
+  //           const Text('আপনি কি নিশ্চিতভাবে logout করতে চান?'),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('না'),
+  //         ),
+  //         FilledButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             auth.logout();
+  //           },
+  //           child: const Text('হ্যাঁ, Logout'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _showPrivacyPolicy(BuildContext context) {
     showModalBottomSheet(

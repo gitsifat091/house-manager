@@ -268,6 +268,7 @@ class _FullProfileView extends StatelessWidget {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
+              Navigator.of(context).popUntil((route) => route.isFirst);
               context.read<AuthService>().logout();
             },
             child: const Text('হ্যাঁ, Logout'),
@@ -440,6 +441,7 @@ class _BasicProfileView extends StatelessWidget {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
+              Navigator.of(context).popUntil((route) => route.isFirst);
               context.read<AuthService>().logout();
             },
             child: const Text('হ্যাঁ, Logout'),
