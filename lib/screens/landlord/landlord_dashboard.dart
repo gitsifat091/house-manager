@@ -1043,7 +1043,7 @@ class _AppDrawer extends StatelessWidget {
 
           // ── Logout + Version ────────────────────────
           _DrawerFooter(onLogout: () {
-            Navigator.pop(context);
+            // Navigator.pop(context);
             _confirmLogout(context);
           }),
         ],
@@ -1051,6 +1051,31 @@ class _AppDrawer extends StatelessWidget {
     );
   }
 
+  // void _confirmLogout(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       title: const Text('Logout করবেন?',
+  //           style: TextStyle(fontWeight: FontWeight.w700)),
+  //       content: const Text('আপনি কি নিশ্চিতভাবে logout করতে চান?'),
+  //       actions: [
+  //         TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('না')),
+  //         FilledButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             context.read<AuthService>().logout();
+  //           },
+  //           child: const Text('হ্যাঁ, Logout'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // _confirmLogout method:
   void _confirmLogout(BuildContext context) {
     showDialog(
       context: context,
@@ -1065,7 +1090,8 @@ class _AppDrawer extends StatelessWidget {
               child: const Text('না')),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context); // dialog বন্ধ
+              Navigator.pop(context); // drawer বন্ধ
               context.read<AuthService>().logout();
             },
             child: const Text('হ্যাঁ, Logout'),

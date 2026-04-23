@@ -611,20 +611,20 @@ class _TenantDrawer extends StatelessWidget {
                   iconBg: primary,
                   label: 'আমার প্রোফাইল',
                   
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => _TenantProfileScreen(user: user),
-                    ));
-                  },
-
-                  // Tenant Profile Screen er jonno
                   // onTap: () {
                   //   Navigator.pop(context);
                   //   Navigator.push(context, MaterialPageRoute(
-                  //     builder: (_) => TenantProfileScreen(user: user), // ← এটা
+                  //     builder: (_) => _TenantProfileScreen(user: user),
                   //   ));
                   // },
+
+                  // Tenant Profile Screen er jonno
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => TenantProfileScreen(user: user), // ← এটা
+                    ));
+                  },
                 ),
 
                 _DrawerSectionLabel('বিলসমূহ', textSecondary),
@@ -693,7 +693,7 @@ class _TenantDrawer extends StatelessWidget {
 
           // ── Logout + Version ────────────────────────
           _DrawerFooter(onLogout: () {
-            Navigator.pop(context);
+            // Navigator.pop(context);
             _confirmLogout(context);
           }),
         ],
@@ -701,7 +701,32 @@ class _TenantDrawer extends StatelessWidget {
     );
   }
 
+  // void _confirmLogout(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       title: const Text('Logout করবেন?',
+  //           style: TextStyle(fontWeight: FontWeight.w700)),
+  //       content: const Text('আপনি কি নিশ্চিতভাবে logout করতে চান?'),
+  //       actions: [
+  //         TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('না')),
+  //         FilledButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             context.read<AuthService>().logout();
+  //           },
+  //           child: const Text('হ্যাঁ, Logout'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   void _confirmLogout(BuildContext context) {
+    // আগে drawer বন্ধ করো না! Dialog দেখাও আগে
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -711,11 +736,12 @@ class _TenantDrawer extends StatelessWidget {
         content: const Text('আপনি কি নিশ্চিতভাবে logout করতে চান?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context), // শুধু dialog বন্ধ
               child: const Text('না')),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context); // dialog বন্ধ
+              Navigator.pop(context); // drawer বন্ধ ← এটা যোগ করো
               context.read<AuthService>().logout();
             },
             child: const Text('হ্যাঁ, Logout'),
