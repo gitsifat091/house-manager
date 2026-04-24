@@ -232,10 +232,14 @@ class _NoticeScreenState extends State<NoticeScreen>
       appBar: AppBar(
         backgroundColor: bg,
         elevation: 0,
+        // leading: IconButton(
+        //   icon: Icon(Icons.menu_rounded, color: textPrimary),
+        //   onPressed: () =>
+        //       widget.scaffoldKey?.currentState?.openDrawer(),
+        // ),
         leading: IconButton(
-          icon: Icon(Icons.menu_rounded, color: textPrimary),
-          onPressed: () =>
-              widget.scaffoldKey?.currentState?.openDrawer(),
+          icon: Icon(Icons.arrow_back_rounded, color: textPrimary),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'নোটিশ বোর্ড',

@@ -697,7 +697,9 @@ import '../../../widgets/tenant_avatar.dart';
 import 'tenant_detail_screen.dart';
 
 class UtilityScreen extends StatefulWidget {
-  const UtilityScreen({super.key});
+  // const UtilityScreen({super.key});
+  final GlobalKey<ScaffoldState>? scaffoldKey;
+  const UtilityScreen({super.key, this.scaffoldKey});
 
   @override
   State<UtilityScreen> createState() => _UtilityScreenState();
@@ -791,7 +793,11 @@ class _UtilityScreenState extends State<UtilityScreen>
                   pinned: true,
                   backgroundColor: bg,
                   elevation: 0,
-                  automaticallyImplyLeading: false,
+                  // automaticallyImplyLeading: false,
+                  leading: IconButton(              // ← এটা যোগ করো
+                    icon: Icon(Icons.menu_rounded, color: textPrimary),
+                    onPressed: () => widget.scaffoldKey?.currentState?.openDrawer(),
+                  ),
                   title: Text(
                     'ইউটিলিটি বিল',
                     style: TextStyle(

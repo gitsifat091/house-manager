@@ -873,6 +873,7 @@ import '../../../widgets/profile_avatar.dart';
 import 'rules_screen.dart';
 import 'chat_list_screen.dart';
 import '../community/community_chat_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({super.key});
@@ -907,7 +908,8 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
       PaymentListScreen(scaffoldKey: _scaffoldKey),
       // NoticeScreen(scaffoldKey: _scaffoldKey),
       // UtilityScreen(scaffoldKey: _scaffoldKey),
-      const UtilityScreen()
+      // const UtilityScreen()
+      UtilityScreen(scaffoldKey: _scaffoldKey)
     ];
 
     return Scaffold(
@@ -1516,6 +1518,7 @@ class _LandlordProfileScreen extends StatelessWidget {
   }
 }
 
+
 // ── Property Page ─────────────────────────────────────────────────────────────
 
 class _PropertyPage extends StatelessWidget {
@@ -1527,233 +1530,863 @@ class _PropertyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = PropertyService();
     final user = context.read<AuthService>().currentUser!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+    final bg = isDark ? const Color(0xFF0F1A14) : const Color(0xFFF5FAF7);
+    final textPrimary = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final textSecondary = isDark ? Colors.white54 : const Color(0xFF6B7280);
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () => scaffoldKey?.currentState?.openDrawer(),
+      backgroundColor: bg,
+      body: FutureBuilder<Map<String, int>>(
+        future: service.getPropertySummary(landlordId),
+        builder: (context, summarySnap) {
+          final data = summarySnap.data ?? {};
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ── SliverAppBar with gradient header ──
+              SliverAppBar(
+                expandedHeight: 200,
+                collapsedHeight: 60,
+                pinned: true,
+                backgroundColor: bg,
+                elevation: 0,
+                leading: IconButton(
+                  icon: Icon(Icons.menu_rounded, color: textPrimary),
+                  onPressed: () =>
+                      scaffoldKey?.currentState?.openDrawer(),
+                ),
+                title: Text(
+                  'স্বাগতম, ${user.name.split(' ')[0]}!',
+                  style: TextStyle(
+                    color: textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                centerTitle: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: _buildHeader(
+                    context: context,
+                    primary: primary,
+                    isDark: isDark,
+                    textPrimary: textPrimary,
+                    userName: user.name.split(' ')[0],
+                    data: data,
+                  ),
+                ),
+              ),
+
+              // ── Section title ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'আমার Properties',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Property List ──
+              StreamBuilder<List<PropertyModel>>(
+                stream: service.getProperties(landlordId),
+                builder: (context, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return SliverFillRemaining(
+                      child: Center(
+                          child: CircularProgressIndicator(color: primary)),
+                    );
+                  }
+                  final properties = snap.data ?? [];
+                  if (properties.isEmpty) {
+                    return SliverFillRemaining(
+                      child: _buildEmptyState(
+                          context, landlordId, primary, textSecondary),
+                    );
+                  }
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (ctx, i) => _PropertyCard(
+                          property: properties[i],
+                          service: service,
+                          isDark: isDark,
+                          primary: primary,
+                          textPrimary: textPrimary,
+                          textSecondary: textSecondary,
+                          index: i,
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      RoomListScreen(property: properties[i]))),
+                          onEdit: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => AddEditPropertyScreen(
+                                      landlordId: landlordId,
+                                      property: properties[i]))),
+                        ),
+                        childCount: properties.length,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: FloatingActionButton.extended(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) =>
+                    AddEditPropertyScreen(landlordId: landlordId)),
+          ),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Property যোগ করুন',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+    );
+  }
+
+  // ── Gradient Header with Stats ──
+  Widget _buildHeader({
+    required BuildContext context,
+    required Color primary,
+    required bool isDark,
+    required Color textPrimary,
+    required String userName,
+    required Map<String, int> data,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1A3328), const Color(0xFF0F1A14)]
+              : [const Color(0xFFE8F5EE), const Color(0xFFF5FAF7)],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 64, 16, 12),
+          child: Row(
+            children: [
+              _statCard(
+                icon: Icons.home_work_rounded,
+                label: 'Properties',
+                value: '${data['totalProperties'] ?? 0}',
+                color: primary,
+                isDark: isDark,
+              ),
+              const SizedBox(width: 10),
+              _statCard(
+                icon: Icons.door_front_door_rounded,
+                label: 'মোট রুম',
+                value: '${data['totalRooms'] ?? 0}',
+                color: const Color(0xFF0891B2),
+                isDark: isDark,
+              ),
+              const SizedBox(width: 10),
+              _statCard(
+                icon: Icons.people_rounded,
+                label: 'ভাড়া দেওয়া',
+                value: '${data['occupiedRooms'] ?? 0}',
+                color: const Color(0xFF059669),
+                isDark: isDark,
+              ),
+              const SizedBox(width: 10),
+              _statCard(
+                icon: Icons.door_back_door_outlined,
+                label: 'খালি রুম',
+                value: '${data['vacantRooms'] ?? 0}',
+                color: const Color(0xFFD97706),
+                isDark: isDark,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('স্বাগতম, ${user.name.split(' ')[0]}!',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const Text('আপনার properties', style: TextStyle(fontSize: 11)),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold, color: color),
+            ),
+            Text(
+              label,
+              style: TextStyle(fontSize: 9, color: color.withOpacity(0.8)),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          _SummarySection(landlordId: landlordId, service: service),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Row(
-              children: [
-                const Text('আমার Properties',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const Spacer(),
-              ],
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<List<PropertyModel>>(
-              stream: service.getProperties(landlordId),
-              builder: (context, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final properties = snap.data ?? [];
-                if (properties.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.home_work_outlined, size: 80,
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-                        const SizedBox(height: 16),
-                        const Text('কোনো property নেই',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        const Text('নিচের বাটন দিয়ে property যোগ করুন'),
-                        const SizedBox(height: 20),
-                        FilledButton.icon(
-                          onPressed: () => Navigator.push(context, MaterialPageRoute(
-                            builder: (_) => AddEditPropertyScreen(landlordId: landlordId),
-                          )),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Property যোগ করুন'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: properties.length,
-                  itemBuilder: (ctx, i) => _PropertyCard(
-                    property: properties[i],
-                    service: service,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => RoomListScreen(property: properties[i]),
-                    )),
-                    onEdit: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => AddEditPropertyScreen(
-                          landlordId: landlordId, property: properties[i]),
-                    )),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(
-          builder: (_) => AddEditPropertyScreen(landlordId: landlordId),
-        )),
-        icon: const Icon(Icons.add),
-        label: const Text('Property যোগ করুন'),
-      ),
-    );
-  }
-}
-
-class _SummarySection extends StatelessWidget {
-  final String landlordId;
-  final PropertyService service;
-  const _SummarySection({required this.landlordId, required this.service});
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, int>>(
-      future: service.getPropertySummary(landlordId),
-      builder: (context, snap) {
-        final data = snap.data ?? {};
-        return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              _SummaryItem(icon: Icons.home_work_rounded, label: 'Properties', value: '${data['totalProperties'] ?? 0}'),
-              _divider(),
-              _SummaryItem(icon: Icons.door_front_door_rounded, label: 'মোট রুম', value: '${data['totalRooms'] ?? 0}'),
-              _divider(),
-              _SummaryItem(icon: Icons.people_rounded, label: 'ভাড়া দেওয়া', value: '${data['occupiedRooms'] ?? 0}'),
-              _divider(),
-              _SummaryItem(icon: Icons.door_back_door_outlined, label: 'খালি', value: '${data['vacantRooms'] ?? 0}'),
-            ],
-          ),
-        );
-      },
     );
   }
 
-  Widget _divider() => Container(
-    width: 1, height: 40, color: Colors.white24,
-    margin: const EdgeInsets.symmetric(horizontal: 8),
-  );
-}
-
-class _SummaryItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _SummaryItem({required this.icon, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
+  Widget _buildEmptyState(BuildContext context, String landlordId,
+      Color primary, Color textSecondary) {
+    return Center(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 22),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.home_work_outlined,
+                size: 50, color: primary.withOpacity(0.5)),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'কোনো Property নেই',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'নিচের বাটন দিয়ে property যোগ করুন',
+            style: TextStyle(fontSize: 14, color: textSecondary),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) =>
+                      AddEditPropertyScreen(landlordId: landlordId)),
+            ),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Property যোগ করুন'),
+            style: FilledButton.styleFrom(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
+// ── Property Card ─────────────────────────────────────────────────────────────
 
 class _PropertyCard extends StatelessWidget {
   final PropertyModel property;
   final PropertyService service;
+  final bool isDark;
+  final Color primary;
+  final Color textPrimary;
+  final Color textSecondary;
+  final int index;
   final VoidCallback onTap;
   final VoidCallback onEdit;
-  const _PropertyCard({required this.property, required this.service, required this.onTap, required this.onEdit});
+
+  const _PropertyCard({
+    required this.property,
+    required this.service,
+    required this.isDark,
+    required this.primary,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.index,
+    required this.onTap,
+    required this.onEdit,
+  });
+
+  // Settings screen এর মত cycling colors
+  static const List<Color> _iconColors = [
+    Color(0xFF2D7A4F),
+    Color(0xFF0891B2),
+    Color(0xFFD97706),
+    Color(0xFF5B4FBF),
+    Color(0xFF059669),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final cardBg = isDark ? const Color(0xFF1A2C22) : Colors.white;
+    final iconBg = _iconColors[index % _iconColors.length];
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 52, height: 52,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.home_work_rounded, color: Theme.of(context).colorScheme.primary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // ── Header row ──
+                Row(
                   children: [
-                    Text(property.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text(property.address,
-                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
-                    const SizedBox(height: 6),
+                    // Icon
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
+                        color: iconBg,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: iconBg.withOpacity(0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      child: Text('${property.totalRooms} টি রুম',
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500)),
+                      child: const Icon(Icons.home_work_rounded,
+                          color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Name + Address
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            property.name,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_rounded,
+                                  size: 12,
+                                  color: textSecondary.withOpacity(0.7)),
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: Text(
+                                  property.address,
+                                  style: TextStyle(
+                                      fontSize: 12, color: textSecondary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Actions
+                    IconButton(
+                      icon: const Icon(Icons.forum_outlined,
+                          color: Colors.indigo, size: 20),
+                      tooltip: 'Community Chat',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CommunityChatScreen(
+                            propertyId: property.id,
+                            propertyName: property.name,
+                          ),
+                        ),
+                      ),
+                    ),
+                    PopupMenuButton(
+                      icon: Icon(Icons.more_vert_rounded,
+                          color: textSecondary, size: 20),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined,
+                                  size: 18, color: primary),
+                              const SizedBox(width: 10),
+                              const Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: const [
+                              Icon(Icons.delete_outline_rounded,
+                                  size: 18, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text('Delete',
+                                  style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onSelected: (val) async {
+                        if (val == 'edit') onEdit();
+                        if (val == 'delete') {
+                          await service.deleteProperty(property.id);
+                        }
+                      },
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.forum_outlined, color: Colors.indigo),
-                tooltip: 'Community Chat',
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CommunityChatScreen(
-                      propertyId: property.id,
-                      propertyName: property.name,
-                    ),
-                  ),
+
+                const SizedBox(height: 12),
+
+                // ── Divider ──
+                Divider(
+                  height: 1,
+                  color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
                 ),
-              ),
-              PopupMenuButton(
-                itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
-                ],
-                onSelected: (val) async {
-                  if (val == 'edit') onEdit();
-                  if (val == 'delete') await service.deleteProperty(property.id);
-                },
-              ),
-            ],
+
+                const SizedBox(height: 12),
+
+                // ── Stats row ──
+                // Row(
+                //   children: [
+                //     _miniStat(
+                //       icon: Icons.door_front_door_rounded,
+                //       label: 'মোট রুম',
+                //       value: '${property.totalRooms}',
+                //       color: primary,
+                //     ),
+                //     _verticalDivider(),
+                //     _miniStat(
+                //       icon: Icons.people_rounded,
+                //       label: 'ভাড়া দেওয়া',
+                //       value: '${property.occupiedRooms ?? 0}',
+                //       color: const Color(0xFF059669),
+                //     ),
+                //     _verticalDivider(),
+                //     _miniStat(
+                //       icon: Icons.door_back_door_outlined,
+                //       label: 'খালি',
+                //       value:
+                //           '${(property.totalRooms) - (property.occupiedRooms ?? 0)}',
+                //       color: const Color(0xFFD97706),
+                //     ),
+                //   ],
+                // ),
+
+                // ── Stats row — Firestore থেকে real data ──
+                FutureBuilder<QuerySnapshot>(
+                  future: FirebaseFirestore.instance
+                      .collection('rooms')
+                      .where('propertyId', isEqualTo: property.id)
+                      .get(),
+                  builder: (context, snap) {
+                    int total = 0;
+                    int occupied = 0;
+                    int vacant = 0;
+
+                    if (snap.hasData) {
+                      final rooms = snap.data!.docs;
+                      total = rooms.length;
+                      occupied = rooms
+                          .where((r) =>
+                              (r.data() as Map<String, dynamic>)['status'] ==
+                              'occupied')
+                          .length;
+                      vacant = total - occupied;
+                    }
+
+                    return Row(
+                      children: [
+                        _miniStat(
+                          icon: Icons.door_front_door_rounded,
+                          label: 'মোট রুম',
+                          value: snap.hasData ? '$total' : '${property.totalRooms}',
+                          color: primary,
+                        ),
+                        _verticalDivider(),
+                        _miniStat(
+                          icon: Icons.people_rounded,
+                          label: 'ভাড়া দেওয়া',
+                          value: snap.hasData ? '$occupied' : '-',
+                          color: const Color(0xFF059669),
+                        ),
+                        _verticalDivider(),
+                        _miniStat(
+                          icon: Icons.door_back_door_outlined,
+                          label: 'খালি',
+                          value: snap.hasData ? '$vacant' : '-',
+                          color: const Color(0xFFD97706),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  Widget _miniStat({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: color),
+              ),
+              Text(
+                label,
+                style: TextStyle(fontSize: 10, color: textSecondary),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _verticalDivider() => Container(
+        width: 1,
+        height: 36,
+        color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+      );
 }
+
+// // ── Property Page ─────────────────────────────────────────────────────────────
+
+// class _PropertyPage extends StatelessWidget {
+//   final String landlordId;
+//   final GlobalKey<ScaffoldState>? scaffoldKey;
+//   const _PropertyPage({required this.landlordId, this.scaffoldKey});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final service = PropertyService();
+//     final user = context.read<AuthService>().currentUser!;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         leading: IconButton(
+//           icon: const Icon(Icons.menu_rounded),
+//           onPressed: () => scaffoldKey?.currentState?.openDrawer(),
+//         ),
+//         title: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text('স্বাগতম, ${user.name.split(' ')[0]}!',
+//                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+//             const Text('আপনার properties', style: TextStyle(fontSize: 11)),
+//           ],
+//         ),
+//       ),
+//       body: Column(
+//         children: [
+//           _SummarySection(landlordId: landlordId, service: service),
+//           Padding(
+//             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+//             child: Row(
+//               children: [
+//                 const Text('আমার Properties',
+//                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+//                 const Spacer(),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             child: StreamBuilder<List<PropertyModel>>(
+//               stream: service.getProperties(landlordId),
+//               builder: (context, snap) {
+//                 if (snap.connectionState == ConnectionState.waiting) {
+//                   return const Center(child: CircularProgressIndicator());
+//                 }
+//                 final properties = snap.data ?? [];
+//                 if (properties.isEmpty) {
+//                   return Center(
+//                     child: Column(
+//                       mainAxisSize: MainAxisSize.min,
+//                       children: [
+//                         Icon(Icons.home_work_outlined, size: 80,
+//                             color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+//                         const SizedBox(height: 16),
+//                         const Text('কোনো property নেই',
+//                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+//                         const SizedBox(height: 8),
+//                         const Text('নিচের বাটন দিয়ে property যোগ করুন'),
+//                         const SizedBox(height: 20),
+//                         FilledButton.icon(
+//                           onPressed: () => Navigator.push(context, MaterialPageRoute(
+//                             builder: (_) => AddEditPropertyScreen(landlordId: landlordId),
+//                           )),
+//                           icon: const Icon(Icons.add),
+//                           label: const Text('Property যোগ করুন'),
+//                         ),
+//                       ],
+//                     ),
+//                   );
+//                 }
+//                 return ListView.builder(
+//                   padding: const EdgeInsets.symmetric(horizontal: 16),
+//                   itemCount: properties.length,
+//                   itemBuilder: (ctx, i) => _PropertyCard(
+//                     property: properties[i],
+//                     service: service,
+//                     onTap: () => Navigator.push(context, MaterialPageRoute(
+//                       builder: (_) => RoomListScreen(property: properties[i]),
+//                     )),
+//                     onEdit: () => Navigator.push(context, MaterialPageRoute(
+//                       builder: (_) => AddEditPropertyScreen(
+//                           landlordId: landlordId, property: properties[i]),
+//                     )),
+//                   ),
+//                 );
+//               },
+//             ),
+//           ),
+//         ],
+//       ),
+//       floatingActionButton: FloatingActionButton.extended(
+//         onPressed: () => Navigator.push(context, MaterialPageRoute(
+//           builder: (_) => AddEditPropertyScreen(landlordId: landlordId),
+//         )),
+//         icon: const Icon(Icons.add),
+//         label: const Text('Property যোগ করুন'),
+//       ),
+//     );
+//   }
+// }
+
+// class _SummarySection extends StatelessWidget {
+//   final String landlordId;
+//   final PropertyService service;
+//   const _SummarySection({required this.landlordId, required this.service});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return FutureBuilder<Map<String, int>>(
+//       future: service.getPropertySummary(landlordId),
+//       builder: (context, snap) {
+//         final data = snap.data ?? {};
+//         return Container(
+//           margin: const EdgeInsets.all(16),
+//           padding: const EdgeInsets.all(16),
+//           decoration: BoxDecoration(
+//             color: Theme.of(context).colorScheme.primary,
+//             borderRadius: BorderRadius.circular(20),
+//           ),
+//           child: Row(
+//             children: [
+//               _SummaryItem(icon: Icons.home_work_rounded, label: 'Properties', value: '${data['totalProperties'] ?? 0}'),
+//               _divider(),
+//               _SummaryItem(icon: Icons.door_front_door_rounded, label: 'মোট রুম', value: '${data['totalRooms'] ?? 0}'),
+//               _divider(),
+//               _SummaryItem(icon: Icons.people_rounded, label: 'ভাড়া দেওয়া', value: '${data['occupiedRooms'] ?? 0}'),
+//               _divider(),
+//               _SummaryItem(icon: Icons.door_back_door_outlined, label: 'খালি', value: '${data['vacantRooms'] ?? 0}'),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+
+//   Widget _divider() => Container(
+//     width: 1, height: 40, color: Colors.white24,
+//     margin: const EdgeInsets.symmetric(horizontal: 8),
+//   );
+// }
+
+// class _SummaryItem extends StatelessWidget {
+//   final IconData icon;
+//   final String label;
+//   final String value;
+//   const _SummaryItem({required this.icon, required this.label, required this.value});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Expanded(
+//       child: Column(
+//         children: [
+//           Icon(icon, color: Colors.white, size: 22),
+//           const SizedBox(height: 4),
+//           Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+//           Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+// class _PropertyCard extends StatelessWidget {
+//   final PropertyModel property;
+//   final PropertyService service;
+//   final VoidCallback onTap;
+//   final VoidCallback onEdit;
+//   const _PropertyCard({required this.property, required this.service, required this.onTap, required this.onEdit});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Card(
+//       margin: const EdgeInsets.only(bottom: 12),
+//       child: InkWell(
+//         onTap: onTap,
+//         borderRadius: BorderRadius.circular(16),
+//         child: Padding(
+//           padding: const EdgeInsets.all(16),
+//           child: Row(
+//             children: [
+//               Container(
+//                 width: 52, height: 52,
+//                 decoration: BoxDecoration(
+//                   color: Theme.of(context).colorScheme.primaryContainer,
+//                   borderRadius: BorderRadius.circular(14),
+//                 ),
+//                 child: Icon(Icons.home_work_rounded, color: Theme.of(context).colorScheme.primary),
+//               ),
+//               const SizedBox(width: 14),
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(property.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+//                     Text(property.address,
+//                         style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+//                     const SizedBox(height: 6),
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+//                       decoration: BoxDecoration(
+//                         color: Theme.of(context).colorScheme.primaryContainer,
+//                         borderRadius: BorderRadius.circular(20),
+//                       ),
+//                       child: Text('${property.totalRooms} টি রুম',
+//                           style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500)),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               IconButton(
+//                 icon: const Icon(Icons.forum_outlined, color: Colors.indigo),
+//                 tooltip: 'Community Chat',
+//                 onPressed: () => Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (_) => CommunityChatScreen(
+//                       propertyId: property.id,
+//                       propertyName: property.name,
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               PopupMenuButton(
+//                 itemBuilder: (_) => [
+//                   const PopupMenuItem(value: 'edit', child: Text('Edit')),
+//                   const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+//                 ],
+//                 onSelected: (val) async {
+//                   if (val == 'edit') onEdit();
+//                   if (val == 'delete') await service.deleteProperty(property.id);
+//                 },
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
