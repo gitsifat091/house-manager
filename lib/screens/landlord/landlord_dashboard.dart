@@ -885,24 +885,29 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // Landlord Dashboard - Tab
   final List<_NavItem> _bottomItems = const [
     _NavItem(icon: Icons.bar_chart_outlined, activeIcon: Icons.bar_chart_rounded, label: 'রিপোর্ট'),
     _NavItem(icon: Icons.home_work_outlined, activeIcon: Icons.home_work_rounded, label: 'Properties'),
     _NavItem(icon: Icons.people_outline, activeIcon: Icons.people_rounded, label: 'ভাড়াটিয়া'),
     _NavItem(icon: Icons.payments_outlined, activeIcon: Icons.payments_rounded, label: 'ভাড়া'),
-    _NavItem(icon: Icons.campaign_outlined, activeIcon: Icons.campaign_rounded, label: 'নোটিশ'),
+    // _NavItem(icon: Icons.campaign_outlined, activeIcon: Icons.campaign_rounded, label: 'নোটিশ'),
+    _NavItem(icon: Icons.electric_bolt_outlined, activeIcon: Icons.electric_bolt_rounded, label: 'ইউটিলিটি'),
   ];
 
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthService>().currentUser!;
 
+    // Page List
     final List<Widget> pages = [
       ChartScreen(scaffoldKey: _scaffoldKey),
       _PropertyPage(landlordId: user.uid, scaffoldKey: _scaffoldKey),
       TenantListScreen(scaffoldKey: _scaffoldKey),
       PaymentListScreen(scaffoldKey: _scaffoldKey),
-      NoticeScreen(scaffoldKey: _scaffoldKey),
+      // NoticeScreen(scaffoldKey: _scaffoldKey),
+      // UtilityScreen(scaffoldKey: _scaffoldKey),
+      const UtilityScreen()
     ];
 
     return Scaffold(
@@ -979,17 +984,32 @@ class _AppDrawer extends StatelessWidget {
                     ));
                   },
                 ),
+
+                // _DrawerTile(
+                //   icon: Icons.electric_bolt_outlined,
+                //   iconBg: const Color(0xFF0891B2),
+                //   label: 'ইউটিলিটি বিল',
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     Navigator.push(context, MaterialPageRoute(
+                //       builder: (_) => const UtilityScreen(),
+                //     ));
+                //   },
+                // ),
+
+                // App Drawer e Notice board
                 _DrawerTile(
-                  icon: Icons.electric_bolt_outlined,
-                  iconBg: const Color(0xFF0891B2),
-                  label: 'ইউটিলিটি বিল',
+                  icon: Icons.campaign_outlined,
+                  iconBg: const Color(0xFF059669),
+                  label: 'নোটিশ বোর্ড',
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const UtilityScreen(),
+                      builder: (_) => const NoticeScreen(),
                     ));
                   },
                 ),
+
                 _DrawerTile(
                   icon: Icons.archive_outlined,
                   iconBg: const Color(0xFF6B7280),
