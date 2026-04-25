@@ -1501,49 +1501,94 @@ class _PaymentListScreenState extends State<PaymentListScreen>
     required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: color.withOpacity(isDark ? 0.15 : 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              shape: BoxShape.circle,
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          FittedBox(
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: color,
-                        fontWeight: FontWeight.w600)),
-                Text(amount,
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: color)),
-                Text(sub,
-                    style: TextStyle(
-                        fontSize: 10,
-                        color: color.withOpacity(0.75))),
-              ],
-            ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            sub,
+            style: TextStyle(fontSize: 9, color: color.withOpacity(0.7)),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
+
+  // Widget _statCard({
+  //   required IconData icon,
+  //   required String label,
+  //   required String amount,
+  //   required String sub,
+  //   required Color color,
+  //   required bool isDark,
+  // }) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(14),
+  //     decoration: BoxDecoration(
+  //       color: color.withOpacity(isDark ? 0.15 : 0.08),
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: color.withOpacity(0.3)),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Container(
+  //           width: 36,
+  //           height: 36,
+  //           decoration: BoxDecoration(
+  //             color: color.withOpacity(0.2),
+  //             shape: BoxShape.circle,
+  //           ),
+  //           child: Icon(icon, color: color, size: 20),
+  //         ),
+  //         const SizedBox(width: 10),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(label,
+  //                   style: TextStyle(
+  //                       fontSize: 11,
+  //                       color: color,
+  //                       fontWeight: FontWeight.w600)),
+  //               Text(amount,
+  //                   style: TextStyle(
+  //                       fontSize: 16,
+  //                       fontWeight: FontWeight.bold,
+  //                       color: color)),
+  //               Text(sub,
+  //                   style: TextStyle(
+  //                       fontSize: 10,
+  //                       color: color.withOpacity(0.75))),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildEmptyState(Color primary, Color textSecondary) {
     return Center(
@@ -1641,7 +1686,7 @@ class _PaymentCard extends StatelessWidget {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(18),
@@ -1654,7 +1699,7 @@ class _PaymentCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1672,7 +1717,7 @@ class _PaymentCard extends StatelessWidget {
                     child: TenantAvatar(
                       tenantName: payment.tenantName,
                       tenantEmail: payment.tenantName,
-                      radius: 22,
+                      radius: 18,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1683,14 +1728,14 @@ class _PaymentCard extends StatelessWidget {
                       children: [
                         Text(payment.tenantName,
                             style: TextStyle(
-                                fontSize: 15,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: textPrimary)),
                         const SizedBox(height: 2),
                         Text(
                           '${payment.propertyName} • রুম ${payment.roomNumber}',
                           style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: textSecondary),
                         ),
                       ],
@@ -1718,7 +1763,7 @@ class _PaymentCard extends StatelessWidget {
               // ── Amount ─────────────────────────────────
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                    horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: primary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
@@ -1729,12 +1774,12 @@ class _PaymentCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.payments_outlined,
-                        size: 16, color: primary),
-                    const SizedBox(width: 6),
+                        size: 14, color: primary),
+                    const SizedBox(width: 5),
                     Text(
                       '৳${payment.amount.toStringAsFixed(0)}',
                       style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: primary),
                     ),

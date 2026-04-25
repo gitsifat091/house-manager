@@ -571,7 +571,7 @@ class _TenantListScreenState extends State<TenantListScreen>
               slivers: [
                 // ── App Bar ────────────────────────────────
                 SliverAppBar(
-                  expandedHeight: 170,
+                  expandedHeight: 185,
                   collapsedHeight: 60,
                   pinned: true,
                   backgroundColor: bg,
@@ -829,43 +829,84 @@ class _TenantListScreenState extends State<TenantListScreen>
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(isDark ? 0.15 : 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: color.withOpacity(0.25), width: 1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.3)),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(value,
-                      style: TextStyle(
-                          color: color,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis),
-                  Text(label,
-                      style: TextStyle(
-                          color: color.withOpacity(0.8),
-                          fontSize: 9),
-                      overflow: TextOverflow.ellipsis),
-                ],
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            FittedBox(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
+            ),
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
       ),
     );
   }
+
+  // Widget _statPill({
+  //   required IconData icon,
+  //   required String label,
+  //   required String value,
+  //   required Color color,
+  //   required bool isDark,
+  // }) {
+  //   return Expanded(
+  //     child: Container(
+  //       padding: const EdgeInsets.symmetric(
+  //           horizontal: 8, vertical: 8),
+  //       decoration: BoxDecoration(
+  //         color: color.withOpacity(isDark ? 0.15 : 0.1),
+  //         borderRadius: BorderRadius.circular(12),
+  //         border: Border.all(
+  //             color: color.withOpacity(0.25), width: 1),
+  //       ),
+  //       child: Row(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Icon(icon, color: color, size: 18),
+  //           const SizedBox(width: 6),
+  //           Expanded(
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 Text(value,
+  //                     style: TextStyle(
+  //                         color: color,
+  //                         fontSize: 12,
+  //                         fontWeight: FontWeight.bold),
+  //                     overflow: TextOverflow.ellipsis),
+  //                 Text(label,
+  //                     style: TextStyle(
+  //                         color: color.withOpacity(0.8),
+  //                         fontSize: 9),
+  //                     overflow: TextOverflow.ellipsis),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // ── Empty State ────────────────────────────────────────────
   Widget _buildEmptyState(Color primary, Color textSecondary) {
