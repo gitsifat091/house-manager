@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class TenantModel {
   final String id;
   final String name;
@@ -9,10 +11,11 @@ class TenantModel {
   final String roomId;
   final String roomNumber;
   final double rentAmount;
-  final DateTime moveInDate;
+  final DateTime moveInDate;  
+  final DateTime? moveOutDate;
   final bool isActive;
   final bool hasEdited;
-  final String landlordId;  // ← যোগ করো
+  final String landlordId;
 
   TenantModel({
     required this.id,
@@ -26,9 +29,10 @@ class TenantModel {
     required this.roomNumber,
     required this.rentAmount,
     required this.moveInDate,
+    this.moveOutDate,
     this.isActive = true,
     this.hasEdited = false,
-    required this.landlordId,  // ← যোগ করো
+    required this.landlordId,  
   });
 
   factory TenantModel.fromMap(Map<String, dynamic> map, String id) {
@@ -44,6 +48,9 @@ class TenantModel {
       roomNumber: map['roomNumber'] ?? '',
       rentAmount: (map['rentAmount'] ?? 0).toDouble(),
       moveInDate: DateTime.fromMillisecondsSinceEpoch(map['moveInDate'] ?? 0),
+      moveOutDate: map['moveOutDate'] != null
+        ? (map['moveOutDate'] as Timestamp).toDate()
+        : null,
       isActive: map['isActive'] ?? true,
       hasEdited: map['hasEdited'] ?? false,
       landlordId: map['landlordId'] ?? '',  // ← যোগ করো
@@ -61,6 +68,9 @@ class TenantModel {
     'roomNumber': roomNumber,
     'rentAmount': rentAmount,
     'moveInDate': moveInDate.millisecondsSinceEpoch,
+    'moveOutDate': moveOutDate != null
+      ? Timestamp.fromDate(moveOutDate!)
+      : null,
     'isActive': isActive,
     'hasEdited': hasEdited,
     'landlordId': landlordId,  // ← যোগ করো
