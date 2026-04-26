@@ -658,7 +658,7 @@ class _RulesScreenState extends State<RulesScreen>
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    // const SizedBox(height: 4),
                     Text(
                       'বাড়ির নিয়ম ও আইনী অধিকার এক জায়গায়',
                       style: TextStyle(
