@@ -3545,6 +3545,8 @@ import '../../../widgets/profile_avatar.dart';
 import 'rules_screen.dart';
 import 'chat_list_screen.dart';
 import '../community/community_chat_screen.dart';
+import 'to_let_screen.dart';
+import 'rental_requests_screen.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({super.key});
@@ -3630,6 +3632,15 @@ class _AppDrawer extends StatelessWidget {
                       builder: (_) => LandlordProfileScreen(user: user),
                     ));
                   },
+                ),
+                _DrawerSectionLabel('ভাড়া ব্যবস্থাপনা', textSecondary),
+                _DrawerTile(
+                  icon: Icons.home_outlined, iconBg: const Color(0xFF059669), label: 'ভাড়া দিন (To-Let)',
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const ToLetScreen())); },
+                ),
+                _DrawerTile(
+                  icon: Icons.inbox_rounded, iconBg: const Color(0xFF0891B2), label: 'ভাড়ার আবেদন',
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => RentalRequestsScreen(landlordId: user.uid))); },
                 ),
                 _DrawerSectionLabel('অতিরিক্ত', textSecondary),
                 _DrawerTile(

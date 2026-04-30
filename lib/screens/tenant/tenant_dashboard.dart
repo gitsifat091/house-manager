@@ -524,6 +524,8 @@ import '../tenant/tenant_rules_screen.dart';
 import '../tenant/tenant_chat_screen.dart';
 import 'tenant_community_screen.dart';
 import 'tenant_profile_screen.dart';
+import 'find_home_screen.dart';
+import 'my_rental_requests_screen.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -623,6 +625,31 @@ class _TenantDrawer extends StatelessWidget {
                     Navigator.pop(context);
                     Navigator.push(context, MaterialPageRoute(
                       builder: (_) => TenantProfileScreen(user: user), // ← এটা
+                    ));
+                  },
+                ),
+
+                _DrawerSectionLabel('বাড়ি খোঁজা', textSecondary),
+
+                _DrawerTile(
+                  icon: Icons.search_rounded,
+                  iconBg: const Color(0xFF059669),
+                  label: 'বাড়ি খুঁজুন',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => const FindHomeScreen(),
+                    ));
+                  },
+                ),
+                _DrawerTile(
+                  icon: Icons.send_rounded,
+                  iconBg: const Color(0xFF0891B2),
+                  label: 'আমার আবেদনসমূহ',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => MyRentalRequestsScreen(userId: user.uid),
                     ));
                   },
                 ),
