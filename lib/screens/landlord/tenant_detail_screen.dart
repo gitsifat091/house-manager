@@ -65,7 +65,7 @@ class TenantDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      SelectableText(
                         tenant.name,
                         style: const TextStyle(
                           fontSize: 22,

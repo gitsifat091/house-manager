@@ -1753,7 +1753,7 @@ class _TenantCard extends StatelessWidget {
                             children: [
                               Icon(Icons.phone_outlined, size: 12, color: textSecondary.withOpacity(0.7)),
                               const SizedBox(width: 4),
-                              Text(tenant.phone, style: TextStyle(fontSize: 12, color: textSecondary)),
+                              SelectableText(tenant.phone, style: TextStyle(fontSize: 12, color: textSecondary)),
                             ],
                           ),
                         ],

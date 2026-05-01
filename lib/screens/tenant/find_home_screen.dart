@@ -175,6 +175,7 @@ class _FindHomeScreenState extends State<FindHomeScreen> {
                             Expanded(
                               child: DropdownButtonFormField<String>(
                                 value: _roomType,
+                                isExpanded: true,
                                 decoration: InputDecoration(
                                   labelText: 'ধরন',
                                   prefixIcon: const Icon(Icons.people_outline_rounded),
@@ -182,7 +183,7 @@ class _FindHomeScreenState extends State<FindHomeScreen> {
                                   fillColor: isDark ? const Color(0xFF0F1A14) : const Color(0xFFF5FAF7),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
                                       borderSide: BorderSide.none),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                                 ),
                                 items: _roomTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                                 onChanged: (v) => setState(() => _roomType = v ?? 'সব'),

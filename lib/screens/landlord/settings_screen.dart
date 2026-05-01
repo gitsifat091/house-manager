@@ -1922,28 +1922,40 @@ class _SettingsScreenState extends State<SettingsScreen>
                 children: [
 
                   // ── Contact Cards ──
+
+                  // ── Old Support Email card ──
+                  // _contactCard(
+                  //   icon: Icons.email_outlined,
+                  //   iconBg: primary,
+                  //   title: 'ইমেইল',
+                  //   subtitle: 'housemanagerbd@gmail.com',
+                  //   isDark: isDark,
+                  //   onTap: () {
+                  //     Navigator.pop(context);
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       const SnackBar(content: Text('Email: housemanagerbd@gmail.com')),
+                  //     );
+                  //   },
+                  // ),
+                  // ── New Support Email Card ──
                   _contactCard(
                     icon: Icons.email_outlined,
                     iconBg: primary,
-                    title: 'ইমেইল',
+                    title: 'সাপোর্ট',
                     subtitle: 'housemanagerbd@gmail.com',
                     isDark: isDark,
-                    onTap: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email: housemanagerbd@gmail.com')),
-                      );
-                    },
+                    onTap: () => _showEmailScreen(context, isDark, primary),
                   ),
-                  const SizedBox(height: 10),
-                  _contactCard(
-                    icon: Icons.schedule_outlined,
-                    iconBg: const Color(0xFF059669),
-                    title: 'সাপোর্ট সময়',
-                    subtitle: 'রবি–বৃহস্পতি, সকাল ৯টা – বিকেল ৫টা',
-                    isDark: isDark,
-                    onTap: null,
-                  ),
+                  // সাপোর্ট সময় Hide
+                  // const SizedBox(height: 10),
+                  // _contactCard(
+                  //   icon: Icons.schedule_outlined,
+                  //   iconBg: const Color(0xFF059669),
+                  //   title: 'সাপোর্ট সময়',
+                  //   subtitle: 'রবি–বৃহস্পতি, সকাল ৯টা – বিকেল ৫টা',
+                  //   isDark: isDark,
+                  //   onTap: null,
+                  // ),
                   const SizedBox(height: 10),
                   _contactCard(
                     icon: Icons.info_outline_rounded,
@@ -2210,6 +2222,15 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
     );
   }
+
+  void _showEmailScreen(BuildContext context, bool isDark, Color primary) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EmailContactSheet(isDark: isDark, primary: primary),
+    );
+  }
 }
 
 // ── Reusable Widget ───────────────────────────────────────────
@@ -2238,6 +2259,183 @@ class _PolicySection extends StatelessWidget {
                       .onSurface
                       .withOpacity(0.7),
                   height: 1.6)),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmailContactSheet extends StatelessWidget {
+  final bool isDark;
+  final Color primary;
+  const _EmailContactSheet({required this.isDark, required this.primary});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A2C22) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade400,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Header
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: primary.withOpacity(0.12),
+            child: Icon(Icons.support_agent_rounded, color: primary, size: 32),
+          ),
+          const SizedBox(height: 12),
+          Text('যোগাযোগ করুন',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87)),
+          const SizedBox(height: 4),
+          Text('আমরা সাহায্য করতে সর্বদা প্রস্তুত',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+          const SizedBox(height: 24),
+
+          // Support Email
+          _infoTile(
+            icon: Icons.email_outlined,
+            label: 'সাপোর্ট ইমেইল',
+            value: 'housemanagerbd@gmail.com',
+            primary: primary, isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+
+          // Developers
+          _devSection(primary, isDark),
+
+          const SizedBox(height: 20),
+
+          // Close Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: const Text('বন্ধ করুন'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color primary,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: primary.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: primary.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: primary.withOpacity(0.15),
+            child: Icon(icon, color: primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+              const SizedBox(height: 2),
+              SelectableText(value,
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _devSection(Color primary, bool isDark) {
+    // final devs = [
+    //   {'name': 'Samad Amin Sifat', 'email': '20234103091@cse.bubt.edu.bd', 'role': 'Project Structure'},
+    //   {'name': 'Sulaiman Khan', 'email': '20234103249@cse.bubt.edu.bd', 'role': 'UI Design'},
+    //   {'name': 'Shihab Ahmed', 'email': '20234103104@cse.bubt.edu.bd', 'role': 'Backend'},
+    // ];
+
+    final devs = [
+      {'name': 'Samad Amin Sifat', 'email': '20234103091@cse.bubt.edu.bd'},
+      {'name': 'Sulaiman Khan', 'email': '20234103249@cse.bubt.edu.bd'},
+      {'name': 'Shihab Ahmed', 'email': '20234103104@cse.bubt.edu.bd'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F1F16) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.code_rounded, size: 16, color: primary),
+              const SizedBox(width: 6),
+              Text('Developers',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+                      color: primary)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...devs.map((dev) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: primary.withOpacity(0.15),
+                  child: Text(dev['name']![0],
+                      style: TextStyle(color: primary, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(dev['name']!,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87)),
+                    // Text(dev['role']!,
+                    //     style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                    SelectableText(dev['email']!,
+                        style: TextStyle(fontSize: 11, color: primary)),
+                  ],
+                ),
+              ],
+            ),
+          )),
         ],
       ),
     );
