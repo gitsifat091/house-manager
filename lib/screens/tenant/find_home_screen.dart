@@ -87,6 +87,35 @@ class _FindHomeScreenState extends State<FindHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Refresh info banner ──
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      // color: const Color.fromARGB(255, 255, 94, 7).withOpacity(0.12),
+                       color: Colors.amber.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amber.withOpacity(0.35)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.refresh_rounded, color: Color.fromARGB(255, 255, 102, 7), size: 18),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'নতুন বিজ্ঞাপন দেখতে "বাড়ি খুঁজুন" বাটনে ক্লিক করুন।',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color.fromARGB(255, 255, 102, 7),
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
                   // ── Filter Card ──
                   Container(
                     padding: const EdgeInsets.all(16),

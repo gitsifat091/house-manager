@@ -1707,6 +1707,7 @@ import 'tenant_profile_screen.dart';
 import 'find_home_screen.dart';
 import 'my_rental_requests_screen.dart';
 import 'tenant_history_screen.dart';
+// import 'landlord_info_screen.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -1815,6 +1816,20 @@ class _TenantDrawer extends StatelessWidget {
                     ));
                   },
                 ),
+
+                // _DrawerTile(
+                //   icon: Icons.home_work_outlined,
+                //   iconBg: const Color(0xFF0891B2),
+                //   label: 'বাড়িওয়ালার তথ্য',
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     Navigator.push(context, MaterialPageRoute(
+                //       builder: (_) => LandlordInfoScreen(
+                //         tenantUserId: user.uid, // ← landlordId না, নিজের uid
+                //       ),
+                //     ));
+                //   },
+                // ),
 
                 _DrawerSectionLabel('বাড়ি খোঁজা', textSecondary),
 
@@ -2236,7 +2251,7 @@ class _InfoTile extends StatelessWidget {
               Text(label,
                   style: TextStyle(fontSize: 11, color: color.onSurface.withOpacity(0.5))),
               const SizedBox(height: 2),
-              Text(value,
+              SelectableText(value,
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ],
           ),

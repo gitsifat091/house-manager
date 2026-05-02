@@ -1968,70 +1968,70 @@ class _SettingsScreenState extends State<SettingsScreen>
 
                   const SizedBox(height: 20),
 
-                  // ── Feedback Form ──
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: primary.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: primary.withOpacity(0.15)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.feedback_outlined, color: primary, size: 18),
-                            const SizedBox(width: 8),
-                            Text('Feedback পাঠান',
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: primary)),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: msgCtrl,
-                          maxLines: 4,
-                          decoration: InputDecoration(
-                            hintText: 'আপনার মতামত বা সমস্যা লিখুন...',
-                            filled: true,
-                            fillColor: isDark
-                                ? const Color(0xFF1A2C22)
-                                : Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.all(14),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              if (msgCtrl.text.trim().isEmpty) return;
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Feedback পাঠানো হয়েছে! ধন্যবাদ 🙏'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.send_rounded, size: 16),
-                            label: const Text('পাঠান'),
-                            style: FilledButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // ── Feedback Form ── (Future feature: Firestore এ save করবে)
+                  // Container(
+                  //   padding: const EdgeInsets.all(16),
+                  //   decoration: BoxDecoration(
+                  //     color: primary.withOpacity(0.06),
+                  //     borderRadius: BorderRadius.circular(16),
+                  //     border: Border.all(color: primary.withOpacity(0.15)),
+                  //   ),
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       Row(
+                  //         children: [
+                  //           Icon(Icons.feedback_outlined, color: primary, size: 18),
+                  //           const SizedBox(width: 8),
+                  //           Text('Feedback পাঠান',
+                  //               style: TextStyle(
+                  //                   fontSize: 14,
+                  //                   fontWeight: FontWeight.w700,
+                  //                   color: primary)),
+                  //         ],
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       TextField(
+                  //         controller: msgCtrl,
+                  //         maxLines: 4,
+                  //         decoration: InputDecoration(
+                  //           hintText: 'আপনার মতামত বা সমস্যা লিখুন...',
+                  //           filled: true,
+                  //           fillColor: isDark
+                  //               ? const Color(0xFF1A2C22)
+                  //               : Colors.white,
+                  //           border: OutlineInputBorder(
+                  //             borderRadius: BorderRadius.circular(12),
+                  //             borderSide: BorderSide.none,
+                  //           ),
+                  //           contentPadding: const EdgeInsets.all(14),
+                  //         ),
+                  //       ),
+                  //       const SizedBox(height: 12),
+                  //       SizedBox(
+                  //         width: double.infinity,
+                  //         child: FilledButton.icon(
+                  //           onPressed: () {
+                  //             if (msgCtrl.text.trim().isEmpty) return;
+                  //             Navigator.pop(context);
+                  //             ScaffoldMessenger.of(context).showSnackBar(
+                  //               const SnackBar(
+                  //                 content: Text('Feedback পাঠানো হয়েছে! ধন্যবাদ 🙏'),
+                  //                 backgroundColor: Colors.green,
+                  //               ),
+                  //             );
+                  //           },
+                  //           icon: const Icon(Icons.send_rounded, size: 16),
+                  //           label: const Text('পাঠান'),
+                  //           style: FilledButton.styleFrom(
+                  //             shape: RoundedRectangleBorder(
+                  //                 borderRadius: BorderRadius.circular(10)),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
 
                   const SizedBox(height: 20),
 

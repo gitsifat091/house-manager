@@ -4120,7 +4120,7 @@ class LandlordProfileScreen extends StatelessWidget {
                   children: [
                     Text(label, style: TextStyle(fontSize: 11, color: textSecondary)),
                     const SizedBox(height: 2),
-                    Text(value,
+                    SelectableText(value,
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textPrimary)),
                   ],
                 ),
