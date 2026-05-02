@@ -4795,6 +4795,66 @@ class _AppDrawer extends StatelessWidget {
   }
 }
 
+// class _DrawerHeader extends StatelessWidget {
+//   final dynamic user;
+//   final Color primary;
+//   final bool isDark;
+//   const _DrawerHeader({required this.user, required this.primary, required this.isDark});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: double.infinity,
+//       decoration: BoxDecoration(
+//         gradient: LinearGradient(
+//           begin: Alignment.topLeft, end: Alignment.bottomRight,
+//           colors: isDark
+//               ? [const Color(0xFF1A3328), const Color(0xFF0F2018)]
+//               : [primary, primary.withOpacity(0.8)],
+//         ),
+//       ),
+//       child: SafeArea(
+//         bottom: false,
+//         child: Padding(
+//           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Consumer<AuthService>(
+//                 builder: (context, auth, _) => ProfileAvatar(
+//                   name: auth.currentUser?.name ?? user.name,
+//                   photoUrl: auth.currentUser?.photoUrl,
+//                   userId: user.uid,
+//                   radius: 36,
+//                   editable: true,
+//                 ),
+//               ),
+//               const SizedBox(height: 14),
+//               Text(user.name,
+//                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+//               const SizedBox(height: 3),
+//               Text(user.email,
+//                   style: const TextStyle(fontSize: 12, color: Colors.white60),
+//                   maxLines: 1, overflow: TextOverflow.ellipsis),
+//               const SizedBox(height: 10),
+//               Container(
+//                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+//                 decoration: BoxDecoration(
+//                   color: Colors.white.withOpacity(0.2),
+//                   borderRadius: BorderRadius.circular(20),
+//                   border: Border.all(color: Colors.white30),
+//                 ),
+//                 child: const Text('বাড়ীওয়ালা',
+//                     style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class _DrawerHeader extends StatelessWidget {
   final dynamic user;
   final Color primary;
@@ -4810,42 +4870,70 @@ class _DrawerHeader extends StatelessWidget {
           begin: Alignment.topLeft, end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF1A3328), const Color(0xFF0F2018)]
-              : [primary, primary.withOpacity(0.8)],
+              : [primary, primary.withOpacity(0.85)],
         ),
       ),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Avatar + camera badge
               Consumer<AuthService>(
                 builder: (context, auth, _) => ProfileAvatar(
                   name: auth.currentUser?.name ?? user.name,
                   photoUrl: auth.currentUser?.photoUrl,
                   userId: user.uid,
-                  radius: 36,
+                  radius: 38,
                   editable: true,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
+
+              // Name
               Text(user.name,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-              const SizedBox(height: 3),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w700,
+                      color: Colors.white, letterSpacing: 0.2)),
+              const SizedBox(height: 4),
+
+              // Email
               Text(user.email,
                   style: const TextStyle(fontSize: 12, color: Colors.white60),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white30),
-                ),
-                child: const Text('বাড়ীওয়ালা',
-                    style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 14),
+
+              // Role badge + divider hint
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7, height: 7,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4ADE80),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text('বাড়ীওয়ালা',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.white,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -4855,17 +4943,67 @@ class _DrawerHeader extends StatelessWidget {
   }
 }
 
+
+// class _DrawerTile extends StatelessWidget {
+//   final IconData icon;
+//   final Color iconBg;
+//   final String label;
+//   final VoidCallback onTap;
+//   const _DrawerTile({required this.icon, required this.iconBg, required this.label, required this.onTap});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isDark = Theme.of(context).brightness == Brightness.dark;
+//     final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+//     return Padding(
+//       padding: const EdgeInsets.only(bottom: 2),
+//       child: Material(
+//         color: Colors.transparent,
+//         borderRadius: BorderRadius.circular(12),
+//         child: InkWell(
+//           onTap: onTap,
+//           borderRadius: BorderRadius.circular(12),
+//           child: Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+//             child: Row(
+//               children: [
+//                 Container(
+//                   width: 38, height: 38,
+//                   decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
+//                   child: Icon(icon, color: Colors.white, size: 19),
+//                 ),
+//                 const SizedBox(width: 14),
+//                 Text(label, style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500)),
+//                 const Spacer(),
+//                 Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white24 : Colors.black12, size: 18),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class _DrawerTile extends StatelessWidget {
   final IconData icon;
   final Color iconBg;
   final String label;
   final VoidCallback onTap;
-  const _DrawerTile({required this.icon, required this.iconBg, required this.label, required this.onTap});
+  final String? badge; // optional notification badge
+  const _DrawerTile({
+    required this.icon, required this.iconBg,
+    required this.label, required this.onTap, this.badge,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final hoverBg = isDark
+        ? Colors.white.withOpacity(0.05)
+        : const Color(0xFF1A1A1A).withOpacity(0.04);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Material(
@@ -4874,19 +5012,53 @@ class _DrawerTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
+          hoverColor: hoverBg,
+          splashColor: iconBg.withOpacity(0.08),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
             child: Row(
               children: [
+                // Icon box
                 Container(
                   width: 38, height: 38,
-                  decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
-                  child: Icon(icon, color: Colors.white, size: 19),
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: iconBg.withOpacity(0.30),
+                        blurRadius: 6, offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 18),
                 ),
                 const SizedBox(width: 14),
-                Text(label, style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500)),
-                const Spacer(),
-                Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white24 : Colors.black12, size: 18),
+
+                // Label
+                Expanded(
+                  child: Text(label,
+                      style: TextStyle(
+                          color: textColor, fontSize: 14,
+                          fontWeight: FontWeight.w500)),
+                ),
+
+                // Badge or chevron
+                if (badge != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(badge!,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 10,
+                            fontWeight: FontWeight.w700)),
+                  )
+                else
+                  Icon(Icons.chevron_right_rounded,
+                      color: isDark ? Colors.white24 : Colors.black12, size: 18),
               ],
             ),
           ),
@@ -4896,19 +5068,101 @@ class _DrawerTile extends StatelessWidget {
   }
 }
 
+
+// class _DrawerSectionLabel extends StatelessWidget {
+//   final String label;
+//   final Color color;
+//   const _DrawerSectionLabel(this.label, this.color);
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
+//       child: Text(label.toUpperCase(),
+//           style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color, letterSpacing: 1.2)),
+//     );
+//   }
+// }
+
 class _DrawerSectionLabel extends StatelessWidget {
   final String label;
   final Color color;
   const _DrawerSectionLabel(this.label, this.color);
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
-      child: Text(label.toUpperCase(),
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color, letterSpacing: 1.2)),
+      padding: const EdgeInsets.fromLTRB(10, 20, 10, 6),
+      child: Row(
+        children: [
+          Container(
+            width: 3, height: 12,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.w700,
+                color: color, letterSpacing: 1.4),
+          ),
+        ],
+      ),
     );
   }
 }
+
+
+// class _DrawerFooter extends StatelessWidget {
+//   final VoidCallback onLogout;
+//   const _DrawerFooter({required this.onLogout});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isDark = Theme.of(context).brightness == Brightness.dark;
+//     return Container(
+//       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+//       decoration: BoxDecoration(
+//         border: Border(top: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB))),
+//       ),
+//       child: Column(
+//         children: [
+//           Material(
+//             color: Colors.transparent,
+//             borderRadius: BorderRadius.circular(12),
+//             child: InkWell(
+//               onTap: onLogout,
+//               borderRadius: BorderRadius.circular(12),
+//               child: Padding(
+//                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+//                 child: Row(
+//                   children: [
+//                     Container(
+//                       width: 38, height: 38,
+//                       decoration: BoxDecoration(
+//                         color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(10),
+//                         border: Border.all(color: Colors.red.withOpacity(0.2)),
+//                       ),
+//                       child: const Icon(Icons.logout_rounded, color: Colors.red, size: 19),
+//                     ),
+//                     const SizedBox(width: 14),
+//                     const Text('Logout', style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w600)),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//           const SizedBox(height: 8),
+//           Text('House Manager v1.0.0',
+//               style: TextStyle(fontSize: 11, color: isDark ? Colors.white24 : Colors.grey.shade400)),
+//           const SizedBox(height: 4),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class _DrawerFooter extends StatelessWidget {
   final VoidCallback onLogout;
@@ -4918,9 +5172,11 @@ class _DrawerFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 20),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB))),
+        border: Border(
+            top: BorderSide(
+                color: isDark ? Colors.white10 : const Color(0xFFE5E7EB))),
       ),
       child: Column(
         children: [
@@ -4930,34 +5186,61 @@ class _DrawerFooter extends StatelessWidget {
             child: InkWell(
               onTap: onLogout,
               borderRadius: BorderRadius.circular(12),
+              splashColor: Colors.red.withOpacity(0.08),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 child: Row(
                   children: [
                     Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.red.withOpacity(0.2)),
+                        color: Colors.red.withOpacity(isDark ? 0.15 : 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: Colors.red.withOpacity(0.25)),
                       ),
-                      child: const Icon(Icons.logout_rounded, color: Colors.red, size: 19),
+                      child: const Icon(Icons.logout_rounded,
+                          color: Colors.red, size: 18),
                     ),
                     const SizedBox(width: 14),
-                    const Text('Logout', style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w600)),
+                    const Expanded(
+                      child: Text('Logout',
+                          style: TextStyle(
+                              color: Colors.red, fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                    Icon(Icons.chevron_right_rounded,
+                        color: Colors.red.withOpacity(0.4), size: 18),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text('House Manager v1.0.0',
-              style: TextStyle(fontSize: 11, color: isDark ? Colors.white24 : Colors.grey.shade400)),
+          const SizedBox(height: 10),
+
+          // Version
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.home_rounded,
+                  size: 12,
+                  color: isDark ? Colors.white24 : Colors.grey.shade400),
+              const SizedBox(width: 4),
+              Text('House Manager v1.0.0',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? Colors.white24
+                          : Colors.grey.shade400)),
+            ],
+          ),
           const SizedBox(height: 4),
         ],
       ),
     );
   }
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── Landlord Profile Screen

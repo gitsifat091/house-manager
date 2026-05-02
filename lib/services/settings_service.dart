@@ -7,7 +7,10 @@ class SettingsService extends ChangeNotifier {
   static const _notifKey = 'notifications_enabled';
   static const _langKey = 'language';
 
+  // আগে
   Color _themeColor = const Color(0xFF1D9E75);
+  // পরে
+  // Color _themeColor = const Color(0xFF0F766E);
   ThemeMode _themeMode = ThemeMode.system;
   bool _notificationsEnabled = true;
   String _language = 'bn';
@@ -16,15 +19,14 @@ class SettingsService extends ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   bool get notificationsEnabled => _notificationsEnabled;
   String get language => _language;
-
+  
   static const List<Map<String, dynamic>> themeOptions = [
-    {'name': 'ফরেস্ট গ্রিন', 'color': Color(0xFF1D9E75), 'dark': Color(0xFF0F6E56)},
-    {'name': 'ওশান ব্লু', 'color': Color(0xFF185FA5), 'dark': Color(0xFF0C447C)},
-    {'name': 'রয়্যাল পার্পেল', 'color': Color(0xFF534AB7), 'dark': Color(0xFF3C3489)},
-    {'name': 'সানসেট কোরাল', 'color': Color(0xFFD85A30), 'dark': Color(0xFF993C1D)},
-    {'name': 'স্লেট গ্রে', 'color': Color(0xFF5F5E5A), 'dark': Color(0xFF444441)},
-    {'name': 'রুবি রেড', 'color': Color(0xFFA32D2D), 'dark': Color(0xFF791F1F)},
+    // {'name': 'ফরেস্ট গ্রিন', 'color': Color(0xFF1D9E75), 'dark': Color(0xFF0F6E56)},
+    {'name': 'ওশান টিল', 'color': Color(0xFF1A5276), 'dark': Color(0xFF1F618D)},
+    {'name': 'প্রপার্টি গ্রিন','color': Color(0xFF2D7A4F), 'dark': Color(0xFF1E5235)},
+    {'name': 'ডার্ক ফরেস্ট',     'color': Color(0xFF0F5132), 'dark': Color(0xFF0A3622)},
   ];
+
 
   Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
