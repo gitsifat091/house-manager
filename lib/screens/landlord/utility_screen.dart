@@ -959,6 +959,9 @@ class _UtilityScreenState extends State<UtilityScreen>
           child: FloatingActionButton.extended(
             onPressed: () =>
                 _showAddBillDialog(context, user.uid),
+            backgroundColor: Theme.of(ctx).colorScheme.primary,  // ← এটা যোগ করো
+            foregroundColor: Colors.white,                     // ← এটা যোগ করো
+            elevation: 4,                                        // ← এটা যোগ করো    
             icon: const Icon(Icons.add_rounded),
             label: const Text('বিল যোগ করুন',
                 style: TextStyle(fontWeight: FontWeight.w700)),
@@ -1001,7 +1004,8 @@ class _UtilityScreenState extends State<UtilityScreen>
                   label: 'মোট বিল',
                   amount: '৳${totalBills.toStringAsFixed(0)}',
                   sub: '$count টি বিল',
-                  color: const Color(0xFF0891B2),
+                  // color: const Color(0xFF0891B2),
+                  color: primary,
                   isDark: isDark,
                 ),
               ),
@@ -1012,7 +1016,8 @@ class _UtilityScreenState extends State<UtilityScreen>
                   label: 'পরিশোধ',
                   amount: '৳${paidBills.toStringAsFixed(0)}',
                   sub: 'পরিশোধিত',
-                  color: Colors.green,
+                  // color: Colors.green,
+                  color: const Color(0xFF059669),
                   isDark: isDark,
                 ),
               ),
@@ -1023,7 +1028,8 @@ class _UtilityScreenState extends State<UtilityScreen>
                   label: 'বাকি',
                   amount: '৳${pendingBills.toStringAsFixed(0)}',
                   sub: 'অপরিশোধিত',
-                  color: Colors.orange,
+                  // color: Colors.orange,
+                  color: const Color(0xFFD97706),
                   isDark: isDark,
                 ),
               ),

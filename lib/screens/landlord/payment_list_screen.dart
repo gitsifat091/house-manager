@@ -1465,7 +1465,8 @@ class _PaymentListScreenState extends State<PaymentListScreen>
                   amount:
                       '৳${totalPaid.toStringAsFixed(0)}',
                   sub: '$paidCount জন পরিশোধ',
-                  color: Colors.green,
+                  // color: Colors.green,
+                  color: const Color(0xFF059669),
                   isDark: isDark,
                 ),
               ),
@@ -1481,7 +1482,8 @@ class _PaymentListScreenState extends State<PaymentListScreen>
                       : '$pendingCount জন বাকি',
                   color: submittedCount > 0
                       ? const Color(0xFF0891B2)
-                      : Colors.orange,
+                      // : Colors.orange,
+                      : const Color(0xFFD97706),
                   isDark: isDark,
                 ),
               ),

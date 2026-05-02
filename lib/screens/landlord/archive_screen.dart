@@ -581,7 +581,7 @@ class _ArchivedCardState extends State<_ArchivedCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tenant.name,
+                        SelectableText(tenant.name,
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
                         const SizedBox(height: 3),
                         Row(
@@ -855,7 +855,7 @@ class _ArchivedCardState extends State<_ArchivedCard> {
                   children: [
                     Text(label, style: TextStyle(fontSize: 11, color: textSecondary)),
                     const SizedBox(height: 1),
-                    Text(value,
+                    SelectableText(value,
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary)),
                   ],
                 ),
