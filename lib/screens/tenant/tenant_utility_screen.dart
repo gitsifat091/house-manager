@@ -1151,7 +1151,9 @@ import '../../../services/utility_service.dart';
  
 class TenantUtilityScreen extends StatefulWidget {
   final UserModel user;
-  const TenantUtilityScreen({super.key, required this.user});
+  // const TenantUtilityScreen({super.key, required this.user});
+  final GlobalKey<ScaffoldState>? scaffoldKey;
+  const TenantUtilityScreen({super.key, required this.user, this.scaffoldKey});
  
   @override
   State<TenantUtilityScreen> createState() => _TenantUtilityScreenState();
@@ -1269,12 +1271,16 @@ class _TenantUtilityScreenState extends State<TenantUtilityScreen>
                         pinned: true,
                         backgroundColor: bg,
                         elevation: 0,
+                        // leading: IconButton(
+                        //   icon: Icon(
+                        //       Icons.arrow_back_ios_new_rounded,
+                        //       size: 20,
+                        //       color: textPrimary),
+                        //   onPressed: () => Navigator.pop(context),
+                        // ),
                         leading: IconButton(
-                          icon: Icon(
-                              Icons.arrow_back_ios_new_rounded,
-                              size: 20,
-                              color: textPrimary),
-                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(Icons.menu_rounded, color: textPrimary),
+                          onPressed: () => widget.scaffoldKey?.currentState?.openDrawer(),
                         ),
                         title: Text(
                           'আমার বিলসমূহ',
@@ -1476,10 +1482,14 @@ class _TenantUtilityScreenState extends State<TenantUtilityScreen>
       appBar: AppBar(
         backgroundColor: bg,
         elevation: 0,
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back_ios_new_rounded,
+        //       color: primary),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: primary),
-          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.menu_rounded, color: primary),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text('আমার বিলসমূহ',
             style: TextStyle(

@@ -1727,7 +1727,8 @@ class _TenantDashboardState extends State<TenantDashboard> {
     final pages = [
       TenantHomeScreen(user: user, scaffoldKey: _scaffoldKey),
       TenantPaymentScreen(user: user, scaffoldKey: _scaffoldKey),
-      TenantUtilityScreen(user: user),
+      // TenantUtilityScreen(user: user),
+      TenantUtilityScreen(user: user, scaffoldKey: _scaffoldKey),
       TenantNoticeScreen(user: user, scaffoldKey: _scaffoldKey),
       TenantMaintenanceScreen(user: user, scaffoldKey: _scaffoldKey),
     ];

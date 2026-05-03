@@ -280,6 +280,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../models/payment_model.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class PdfService {
   static const List<String> _months = [
@@ -598,4 +600,30 @@ class PdfService {
   static Future<void> sharePdf(Uint8List pdfBytes, String filename) async {
     await Printing.sharePdf(bytes: pdfBytes, filename: filename);
   }
+
+  // ── Download PDF ─────────────────────────────────────────────────────────
+  static Future<String?> downloadPdf(
+      Uint8List pdfBytes, String filename) async {
+    try {
+      Directory? dir;
+      if (Platform.isAndroid) {
+        dir = Directory('/storage/emulated/0/Download');
+        if (!await dir.exists()) {
+          dir = await getExternalStorageDirectory();
+        }
+      } else if (Platform.isIOS) {
+        dir = await getApplicationDocumentsDirectory();
+      } else {
+        await sharePdf(pdfBytes, filename);
+        return null;
+      }
+      final file = File('${dir!.path}/$filename');
+      await file.writeAsBytes(pdfBytes);
+      return file.path;
+    } catch (_) {
+      await sharePdf(pdfBytes, filename);
+      return null;
+    }
+  }
+
 }
