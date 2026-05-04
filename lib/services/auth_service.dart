@@ -64,8 +64,13 @@ class AuthService extends ChangeNotifier {
       );
 
       await _db.collection('users').doc(user.uid).set(user.toMap());
+      
       _currentUser = user;
       notifyListeners();
+
+      // ← Firebase listener নিজেই handle করবে
+      // await _loadUserData(cred.user!.uid);
+      
       return null; // success
     } on FirebaseAuthException catch (e) {
       return _getErrorMessage(e.code);

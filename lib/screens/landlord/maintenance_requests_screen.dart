@@ -633,6 +633,7 @@ class _MaintenanceCard extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: statusColor,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

@@ -1147,12 +1147,13 @@ class _UtilityScreenState extends State<UtilityScreen>
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
+        builder: (ctx, setModalState) => SingleChildScrollView(
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
             top: 8,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            // bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           ),
           child: Form(
             key: formKey,
