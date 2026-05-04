@@ -24,7 +24,7 @@ class SettingsService extends ChangeNotifier {
     // {'name': 'ফরেস্ট গ্রিন', 'color': Color(0xFF1D9E75), 'dark': Color(0xFF0F6E56)},
     {'name': 'ওশান টিল', 'color': Color(0xFF1A5276), 'dark': Color(0xFF1F618D)},
     {'name': 'প্রপার্টি গ্রিন','color': Color(0xFF2D7A4F), 'dark': Color(0xFF1E5235)},
-    {'name': 'ডার্ক ফরেস্ট',     'color': Color(0xFF0F5132), 'dark': Color(0xFF0A3622)},
+    {'name': 'ডার্ক ফরেস্ট', 'color': Color(0xFF0F5132), 'dark': Color(0xFF0A3622)},
   ];
 
 
