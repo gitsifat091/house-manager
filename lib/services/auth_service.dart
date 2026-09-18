@@ -10,9 +10,17 @@ class AuthService extends ChangeNotifier {
 
   UserModel? _currentUser;
   bool _isLoading = true;
+  String? _loadError;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
+
+  /// Set when we are authenticated but could not load the profile.
+  ///
+  /// This is not the same as being signed out, and the UI must not treat it
+  /// that way: dropping someone on the login screen after a lost connection
+  /// invites them to register a second account for an email they already own.
+  String? get loadError => _loadError;
 
   AuthService() {
     _auth.authStateChanges().listen(_onAuthStateChanged);
@@ -33,13 +41,41 @@ class AuthService extends ChangeNotifier {
       final doc = await _db.collection('users').doc(uid).get();
       if (doc.exists) {
         _currentUser = UserModel.fromMap(doc.data()!);
+        _loadError = null;
+      } else {
+        // Authenticated with no profile document. That is a half-finished
+        // registration, not a session: sign out so the email is usable again
+        // rather than leaving the account in a state it cannot recover from.
+        _currentUser = null;
+        _loadError = 'আপনার প্রোফাইল পাওয়া যায়নি। আবার register করুন।';
+        await _auth.signOut();
       }
     } catch (e) {
-      _currentUser = null;
+      // A dropped connection or a denied read is not a sign-out. Keep the
+      // session we already have; only report a failure when there is nothing
+      // to fall back on.
+      if (_currentUser == null || _currentUser!.uid != uid) {
+        _loadError =
+            'তথ্য load করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।';
+      }
     }
     await _linkTenancies();
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Re-attempts the profile load after a failure.
+  Future<void> retryLoad() async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      _loadError = null;
+      notifyListeners();
+      return;
+    }
+    _isLoading = true;
+    _loadError = null;
+    notifyListeners();
+    await _loadUserData(firebaseUser.uid);
   }
 
   /// Attaches any unowned tenant records to this account.
@@ -69,32 +105,47 @@ class AuthService extends ChangeNotifier {
     required UserRole role,
   }) async {
     final normalisedEmail = email.trim().toLowerCase();
+
+    final UserCredential cred;
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(
+      cred = await _auth.createUserWithEmailAndPassword(
         email: normalisedEmail,
         password: password,
       );
-
-      final user = UserModel(
-        uid: cred.user!.uid,
-        name: name,
-        email: normalisedEmail,
-        phone: phone,
-        role: role,
-      );
-
-      await _db.collection('users').doc(user.uid).set(user.toMap());
-      
-      _currentUser = user;
-      notifyListeners();
-
-      // ← Firebase listener নিজেই handle করবে
-      // await _loadUserData(cred.user!.uid);
-      
-      return null; // success
     } on FirebaseAuthException catch (e) {
       return _getErrorMessage(e.code);
+    } catch (e) {
+      return _getErrorMessage('unknown');
     }
+
+    final user = UserModel(
+      uid: cred.user!.uid,
+      name: name,
+      email: normalisedEmail,
+      phone: phone,
+      role: role,
+    );
+
+    try {
+      await _db.collection('users').doc(user.uid).set(user.toMap());
+    } catch (e) {
+      // The account exists in Auth but has no profile, so it could never sign
+      // in — and the email would stay claimed, so the person could not
+      // register again either. Undo it and let them retry.
+      try {
+        await cred.user?.delete();
+      } catch (_) {
+        // Deletion can fail; sign out at least, so the app does not sit in a
+        // session with no profile behind it.
+        await _auth.signOut();
+      }
+      return 'অ্যাকাউন্ট তৈরি করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।';
+    }
+
+    _currentUser = user;
+    _loadError = null;
+    notifyListeners();
+    return null; // success
   }
 
   // Login
@@ -102,6 +153,7 @@ class AuthService extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
+    _loadError = null;
     try {
       await _auth.signInWithEmailAndPassword(
         email: email.trim().toLowerCase(),
@@ -110,6 +162,8 @@ class AuthService extends ChangeNotifier {
       return null; // success
     } on FirebaseAuthException catch (e) {
       return _getErrorMessage(e.code);
+    } catch (e) {
+      return _getErrorMessage('unknown');
     }
   }
 
@@ -118,6 +172,7 @@ class AuthService extends ChangeNotifier {
     TenantIdentityService.reset();
     await _auth.signOut();
     _currentUser = null;
+    _loadError = null;
     notifyListeners();
   }
 
@@ -190,6 +245,16 @@ class AuthService extends ChangeNotifier {
 
   String _getErrorMessage(String code) {
     switch (code) {
+      // Projects with email enumeration protection on — the default for
+      // new ones — return invalid-credential rather than naming which half
+      // was wrong, so one message has to cover both.
+      case 'invalid-credential':
+      case 'INVALID_LOGIN_CREDENTIALS':
+        return 'Email অথবা password ভুল হয়েছে।';
+      case 'network-request-failed':
+        return 'ইন্টারনেট সংযোগ নেই। সংযোগ দেখে আবার চেষ্টা করুন।';
+      case 'too-many-requests':
+        return 'অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।';
       case 'user-not-found': return 'এই email এ কোনো account নেই।';
       case 'wrong-password': return 'Password ভুল হয়েছে।';
       case 'email-already-in-use': return 'এই email আগে থেকেই registered।';

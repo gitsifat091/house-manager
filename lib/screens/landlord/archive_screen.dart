@@ -915,12 +915,15 @@ class _ArchivedCardState extends State<_ArchivedCard> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('পুনরায় যোগ করবেন?', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('পুনরায় যোগ করবেন?',
+            style: TextStyle(fontWeight: FontWeight.w700)),
         content: Text(
             '${tenant.name} কে active tenant হিসেবে ফিরিয়ে আনা হবে।\n\n'
-            'তবে রুম ${tenant.roomNumber} যদি অন্য কেউ নিয়ে থাকে, conflict হতে পারে।'),
+            'রুম ${tenant.roomNumber} অন্য কেউ নিয়ে থাকলে ফিরিয়ে আনা যাবে না।'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('বাতিল')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('বাতিল')),
           FilledButton(
               onPressed: () => Navigator.pop(context, true),
               child: const Text('হ্যাঁ, ফিরিয়ে আনুন')),
@@ -930,22 +933,59 @@ class _ArchivedCardState extends State<_ArchivedCard> {
     if (confirm != true) return;
 
     final db = FirebaseFirestore.instance;
-    await db.collection('tenants').doc(tenant.id).update({
-      'isActive': true,
-      'moveOutDate': null, // restore করলে moveOutDate clear
-    });
-    await db.collection('rooms').doc(tenant.roomId).update({
-      'status': 'occupied',
-      'tenantId': tenant.id,
-      'tenantName': tenant.name,
-    });
+    String? failure;
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${tenant.name} কে ফিরিয়ে আনা হয়েছে'),
-        backgroundColor: Colors.green,
-      ));
+    try {
+      // A transaction, because between reading the room and writing to it
+      // somebody else can move in. Without this the restore silently
+      // overwrote the current occupant of the room.
+      await db.runTransaction((tx) async {
+        final roomRef = db.collection('rooms').doc(tenant.roomId);
+        final roomSnap = await tx.get(roomRef);
+
+        if (!roomSnap.exists) {
+          failure = 'রুম ${tenant.roomNumber} আর নেই।';
+          return;
+        }
+
+        final occupant = (roomSnap.data()?['tenantId'] ?? '') as String? ?? '';
+        if (occupant.isNotEmpty && occupant != tenant.id) {
+          final occupantName =
+              (roomSnap.data()?['tenantName'] ?? '') as String? ?? '';
+          failure = occupantName.isEmpty
+              ? 'রুম ${tenant.roomNumber} এ এখন অন্য একজন আছেন।'
+              : 'রুম ${tenant.roomNumber} এ এখন $occupantName আছেন।';
+          return;
+        }
+
+        tx.update(db.collection('tenants').doc(tenant.id), {
+          'isActive': true,
+          'moveOutDate': null, // restore করলে moveOutDate clear
+        });
+        tx.update(roomRef, {
+          'status': 'occupied',
+          'tenantId': tenant.id,
+          'tenantName': tenant.name,
+        });
+      });
+    } catch (e) {
+      failure = 'ফিরিয়ে আনা যায়নি। আবার চেষ্টা করুন।';
     }
+
+    if (!context.mounted) return;
+
+    if (failure != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(failure!),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('${tenant.name} কে ফিরিয়ে আনা হয়েছে'),
+      backgroundColor: Colors.green,
+    ));
   }
 
   Future<void> _permanentDelete(BuildContext context, TenantModel tenant) async {

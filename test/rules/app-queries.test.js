@@ -23,6 +23,7 @@ import {
   where,
   limit,
   writeBatch,
+  runTransaction,
   getDocs,
 } from 'firebase/firestore';
 
@@ -441,6 +442,28 @@ describe('write flows', () => {
       { status: 'occupied', tenantId: 'y', tenantName: 'T' });
     batch.update(doc(db, 'listings', 'listing-1'), { isActive: false });
     await assertSucceeds(batch.commit());
+  });
+
+  it('landlord restores an archived tenant inside a transaction', async () => {
+    // archive first so there is something to restore
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const d = ctx.firestore();
+      await updateDoc(doc(d, 'tenants', REC), { isActive: false });
+      await updateDoc(doc(d, 'rooms', ROOM),
+        { status: 'vacant', tenantId: null, tenantName: null });
+    });
+
+    const db = asLandlord();
+    await assertSucceeds(runTransaction(db, async (tx) => {
+      const roomRef = doc(db, 'rooms', ROOM);
+      const snap = await tx.get(roomRef);
+      const occupant = snap.data()?.tenantId ?? '';
+      if (occupant && occupant !== REC) throw new Error('occupied');
+      tx.update(doc(db, 'tenants', REC),
+        { isActive: true, moveOutDate: null });
+      tx.update(roomRef,
+        { status: 'occupied', tenantId: REC, tenantName: 'T' });
+    }));
   });
 
   it('landlord archives a tenant and frees the room', async () => {

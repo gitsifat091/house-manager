@@ -89,6 +89,17 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (auth.currentUser == null) {
+          // Being unable to read the profile is not the same as being signed
+          // out. Showing the login screen here invites someone to register a
+          // second account for an email they already own.
+          final error = auth.loadError;
+          if (error != null) {
+            return _ProfileLoadFailed(
+              message: error,
+              onRetry: auth.retryLoad,
+              onSignOut: auth.logout,
+            );
+          }
           return const LoginScreen();
         }
         // Role-based routing
@@ -101,6 +112,52 @@ class AuthWrapper extends StatelessWidget {
           return const TenantDashboard();
         }
       },
+    );
+  }
+}
+
+class _ProfileLoadFailed extends StatelessWidget {
+  final String message;
+  final Future<void> Function() onRetry;
+  final Future<void> Function() onSignOut;
+
+  const _ProfileLoadFailed({
+    required this.message,
+    required this.onRetry,
+    required this.onSignOut,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 56, color: Colors.grey),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 28),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('আবার চেষ্টা করুন'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: onSignOut,
+                child: const Text('Login screen এ ফিরুন'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
