@@ -1,0 +1,25 @@
+# Release signing credentials — copy to android/key.properties and fill in.
+#
+# android/key.properties is gitignored and must stay that way. It holds the
+# passwords to your upload key; anyone with that key can publish updates that
+# Android will accept as genuinely yours.
+#
+# 1. Generate a keystore (once, and never regenerate it — losing it means you
+#    can no longer ship updates to an existing Play Store listing):
+#
+#      keytool -genkey -v -keystore upload-keystore.jks \
+#        -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+#    Keep the .jks file somewhere backed up and outside the repository.
+#
+# 2. Copy this file to android/key.properties and fill in the four values.
+#
+# 3. Build:  flutter build appbundle --release
+#
+# If android/key.properties is missing, the release build falls back to the
+# debug key so local release runs still work. Those builds cannot be uploaded.
+
+storeFile=/absolute/path/to/upload-keystore.jks
+storePassword=
+keyAlias=upload
+keyPassword=
