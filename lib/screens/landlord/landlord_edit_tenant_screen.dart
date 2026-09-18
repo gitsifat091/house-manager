@@ -55,6 +55,7 @@ class _LandlordEditTenantScreenState
         'name': newName,
         'phone': _phoneCtrl.text.trim(),
         'email': _emailCtrl.text.trim(),
+        'emailLower': TenantModel.normaliseEmail(_emailCtrl.text),
         'nidNumber': _nidCtrl.text.trim(),
         'rentAmount': newRent,
         'moveInDate': _moveInDate.millisecondsSinceEpoch, 

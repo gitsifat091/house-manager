@@ -995,6 +995,7 @@ import '../shared/notification_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../widgets/profile_avatar.dart';
+import '../../services/tenant_identity_service.dart';
 
 class TenantHomeScreen extends StatelessWidget {
   final UserModel user;
@@ -1003,16 +1004,13 @@ class TenantHomeScreen extends StatelessWidget {
 
   Future<Map<String, dynamic>> _loadData() async {
     final db = FirebaseFirestore.instance;
-    final tenantSnap = await db
-        .collection('tenants')
-        .where('email', isEqualTo: user.email)
-        .where('isActive', isEqualTo: true)
-        .get();
+    final tenant = await TenantIdentityService.activeTenancy(
+      uid: user.uid,
+      email: user.email,
+    );
 
-    if (tenantSnap.docs.isEmpty) return {'tenant': null, 'room': null};
+    if (tenant == null) return {'tenant': null, 'room': null};
 
-    final tenant =
-        TenantModel.fromMap(tenantSnap.docs.first.data(), tenantSnap.docs.first.id);
     final roomSnap = await db.collection('rooms').doc(tenant.roomId).get();
     RoomModel? room;
     if (roomSnap.exists) room = RoomModel.fromMap(roomSnap.data()!, roomSnap.id);

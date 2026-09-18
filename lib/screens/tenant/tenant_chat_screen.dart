@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/user_model.dart';
-import '../../../models/tenant_model.dart';
 import '../../../services/chat_service.dart';
 import '../shared/chat_screen.dart';
+import '../../services/tenant_identity_service.dart';
 
 class TenantChatScreen extends StatefulWidget {
   final UserModel user;
@@ -25,19 +25,15 @@ class _TenantChatScreenState extends State<TenantChatScreen> {
   }
 
   Future<void> _loadChat() async {
-    final tenantSnap = await FirebaseFirestore.instance
-        .collection('tenants')
-        .where('email', isEqualTo: widget.user.email)
-        .where('isActive', isEqualTo: true)
-        .get();
+    final tenant = await TenantIdentityService.activeTenancy(
+      uid: widget.user.uid,
+      email: widget.user.email,
+    );
 
-    if (tenantSnap.docs.isEmpty) {
-      setState(() => _loading = false);
+    if (tenant == null) {
+      if (mounted) setState(() => _loading = false);
       return;
     }
-
-    final tenant = TenantModel.fromMap(
-        tenantSnap.docs.first.data(), tenantSnap.docs.first.id);
 
     // Landlord নাম নাও
     final landlordDoc = await FirebaseFirestore.instance
@@ -54,6 +50,7 @@ class _TenantChatScreenState extends State<TenantChatScreen> {
       tenant: tenant,
     );
 
+    if (!mounted) return;
     setState(() => _loading = false);
   }
 

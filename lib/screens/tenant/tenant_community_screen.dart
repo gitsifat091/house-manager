@@ -81,9 +81,10 @@
 
 
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../community/community_chat_screen.dart';
+import '../../services/tenant_identity_service.dart';
+import '../../models/tenant_model.dart';
 
 class TenantCommunityChatScreen extends StatelessWidget {
   final dynamic user;
@@ -91,11 +92,13 @@ class TenantCommunityChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance
-          .collection('tenants')
-          .where('email', isEqualTo: user.email) // ← email দিয়ে query
-          .get(),
+    return FutureBuilder<TenantModel?>(
+      // Resolved by account, and only while the tenancy is active, so a
+      // moved-out tenant loses community access.
+      future: TenantIdentityService.activeTenancy(
+        uid: user.uid,
+        email: user.email,
+      ),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -103,12 +106,9 @@ class TenantCommunityChatScreen extends StatelessWidget {
           );
         }
 
-        final docs = snap.data?.docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return data['isArchived'] != true;
-        }).toList() ?? [];
+        final tenant = snap.data;
 
-        if (docs.isEmpty) {
+        if (tenant == null) {
           return Scaffold(
             appBar: AppBar(title: const Text('Community Chat')),
             body: const Center(
@@ -124,13 +124,11 @@ class TenantCommunityChatScreen extends StatelessWidget {
           );
         }
 
-        final tenantData = docs.first.data() as Map<String, dynamic>;
-        final propertyId = tenantData['propertyId'] ?? '';
-        final propertyName = tenantData['propertyName'] ?? 'আমার বাড়ি';
+        final propertyName = tenant.propertyName.trim();
 
         return CommunityChatScreen(
-          propertyId: propertyId,
-          propertyName: propertyName,
+          propertyId: tenant.propertyId,
+          propertyName: propertyName.isEmpty ? 'আমার বাড়ি' : propertyName,
         );
       },
     );

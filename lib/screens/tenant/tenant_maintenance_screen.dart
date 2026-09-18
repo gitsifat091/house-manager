@@ -905,10 +905,10 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/maintenance_model.dart';
 import '../../../models/user_model.dart';
 import '../../../services/maintenance_service.dart';
+import '../../services/tenant_identity_service.dart';
  
 class TenantMaintenanceScreen extends StatefulWidget {
   final UserModel user;
@@ -948,20 +948,16 @@ class _TenantMaintenanceScreenState extends State<TenantMaintenanceScreen>
   }
  
   Future<void> _loadTenant() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('tenants')
-        .where('email', isEqualTo: widget.user.email)
-        .where('isActive', isEqualTo: true)
-        .get();
- 
-    if (snap.docs.isNotEmpty) {
-      setState(() {
-        _tenantData = {...snap.docs.first.data(), 'id': snap.docs.first.id};
-        _loading = false;
-      });
-    } else {
-      setState(() => _loading = false);
-    }
+    final tenant = await TenantIdentityService.activeTenancy(
+      uid: widget.user.uid,
+      email: widget.user.email,
+    );
+    if (!mounted) return;
+    setState(() {
+      _tenantData =
+          tenant == null ? null : {...tenant.toMap(), 'id': tenant.id};
+      _loading = false;
+    });
     _animController.forward();
   }
  

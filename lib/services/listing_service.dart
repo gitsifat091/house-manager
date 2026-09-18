@@ -527,6 +527,8 @@ class ListingService {
     final tenantRef = _db.collection('tenants').doc();
     final tenant = TenantModel(
       id: tenantRef.id,
+      // The requester is signed in, so the account link is known up front.
+      userId: request.tenantUserId,
       name: request.tenantName,
       phone: request.tenantPhone,
       email: request.tenantEmail,

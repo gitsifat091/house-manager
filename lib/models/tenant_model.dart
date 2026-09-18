@@ -2,6 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TenantModel {
   final String id;
+
+  /// Firebase Auth uid of the tenant this record belongs to.
+  ///
+  /// This is the identity link — every tenant-side screen resolves "who am I"
+  /// through this field, never through email. Empty means the tenant has not
+  /// registered (or not yet been claimed); see TenantIdentityService.
+  final String userId;
+
   final String name;
   final String phone;
   final String email;
@@ -19,6 +27,7 @@ class TenantModel {
 
   TenantModel({
     required this.id,
+    this.userId = '',
     required this.name,
     required this.phone,
     required this.email,
@@ -38,6 +47,7 @@ class TenantModel {
   factory TenantModel.fromMap(Map<String, dynamic> map, String id) {
     return TenantModel(
       id: id,
+      userId: map['userId'] ?? '',
       name: map['name'] ?? '',
       phone: map['phone'] ?? '',
       email: map['email'] ?? '',
@@ -57,10 +67,16 @@ class TenantModel {
     );
   }
 
+  /// Normalised email used for lookups. Always derived, never stored by hand,
+  /// so it cannot drift out of sync with [email].
+  static String normaliseEmail(String email) => email.trim().toLowerCase();
+
   Map<String, dynamic> toMap() => {
+    'userId': userId,
     'name': name,
     'phone': phone,
     'email': email,
+    'emailLower': normaliseEmail(email),
     'nidNumber': nidNumber,
     'propertyId': propertyId,
     'propertyName': propertyName,

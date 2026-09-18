@@ -1131,6 +1131,7 @@ import '../../../models/payment_model.dart';
 import '../../../models/user_model.dart';
 import '../../../services/pdf_service.dart';
 import '../../../services/payment_service.dart';
+import '../../services/tenant_identity_service.dart';
 // import '../../../services/email_service.dart';
  
 class TenantPaymentScreen extends StatefulWidget {
@@ -1169,20 +1170,15 @@ class _TenantPaymentScreenState extends State<TenantPaymentScreen> {
   }
  
   Future<void> _loadTenantId() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('tenants')
-        .where('email', isEqualTo: widget.user.email)
-        .where('isActive', isEqualTo: true)
-        .get();
- 
-    if (snap.docs.isNotEmpty) {
-      setState(() {
-        _tenantId = snap.docs.first.id;
-        _loading = false;
-      });
-    } else {
-      setState(() => _loading = false);
-    }
+    final tenant = await TenantIdentityService.activeTenancy(
+      uid: widget.user.uid,
+      email: widget.user.email,
+    );
+    if (!mounted) return;
+    setState(() {
+      _tenantId = tenant?.id;
+      _loading = false;
+    });
   }
  
   void _showSubmitPaymentSheet(BuildContext context, PaymentModel payment) {

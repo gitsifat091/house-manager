@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'tenant_identity_service.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -37,8 +37,27 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       _currentUser = null;
     }
+    await _linkTenancies();
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Attaches any unowned tenant records to this account.
+  ///
+  /// Runs once per sign-in. Records a landlord creates later are picked up by
+  /// TenantIdentityService.activeTenancy, which retries the claim when its uid
+  /// lookup finds nothing.
+  Future<void> _linkTenancies() async {
+    final user = _currentUser;
+    if (user == null || user.role != UserRole.tenant) return;
+    try {
+      await TenantIdentityService.claimTenancies(
+        uid: user.uid,
+        email: user.email,
+      );
+    } catch (_) {
+      // Never let this block sign-in; screens retry the claim on demand.
+    }
   }
 
   // Register
@@ -49,16 +68,17 @@ class AuthService extends ChangeNotifier {
     required String password,
     required UserRole role,
   }) async {
+    final normalisedEmail = email.trim().toLowerCase();
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
+        email: normalisedEmail,
         password: password,
       );
 
       final user = UserModel(
         uid: cred.user!.uid,
         name: name,
-        email: email,
+        email: normalisedEmail,
         phone: phone,
         role: role,
       );
@@ -83,7 +103,10 @@ class AuthService extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await _auth.signInWithEmailAndPassword(
+        email: email.trim().toLowerCase(),
+        password: password,
+      );
       return null; // success
     } on FirebaseAuthException catch (e) {
       return _getErrorMessage(e.code);
@@ -92,6 +115,7 @@ class AuthService extends ChangeNotifier {
 
   // Logout
   Future<void> logout() async {
+    TenantIdentityService.reset();
     await _auth.signOut();
     _currentUser = null;
     notifyListeners();

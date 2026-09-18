@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../services/auth_service.dart';
 import '../../../models/tenant_model.dart';
 import '../../../models/payment_model.dart';
+import '../../services/tenant_identity_service.dart';
 
 class TenantHistoryScreen extends StatelessWidget {
   const TenantHistoryScreen({super.key});
@@ -35,22 +36,15 @@ class TenantHistoryScreen extends StatelessWidget {
             centerTitle: true,
           ),
 
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('tenants')
-                .where('email', isEqualTo: user.email)
-                .where('isActive', isEqualTo: false)
-                .snapshots(),
+          StreamBuilder<List<TenantModel>>(
+            stream: TenantIdentityService.watchPastTenancies(user.uid),
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
                 return SliverFillRemaining(
                     child: Center(child: CircularProgressIndicator(color: primary)));
               }
 
-              final records = (snap.data?.docs ?? [])
-                  .map((d) => TenantModel.fromMap(d.data() as Map<String, dynamic>, d.id))
-                  .toList()
-                ..sort((a, b) => b.moveInDate.compareTo(a.moveInDate));
+              final records = snap.data ?? const <TenantModel>[];
 
               if (records.isEmpty) {
                 return SliverFillRemaining(

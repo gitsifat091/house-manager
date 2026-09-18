@@ -260,6 +260,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/user_model.dart';
+import '../../services/tenant_identity_service.dart';
+import '../../models/tenant_model.dart';
 
 class TenantEditProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -289,22 +291,21 @@ class _TenantEditProfileScreenState extends State<TenantEditProfileScreen> {
   }
 
   Future<void> _loadData() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('tenants')
-        .where('email', isEqualTo: widget.user.email)
-        .where('isActive', isEqualTo: true)
-        .get();
+    final tenant = await TenantIdentityService.activeTenancy(
+      uid: widget.user.uid,
+      email: widget.user.email,
+    );
 
-    if (snap.docs.isNotEmpty) {
-      final data = snap.docs.first.data();
-      _tenantDocId = snap.docs.first.id;
-      _nameCtrl.text = data['name'] ?? '';
-      _phoneCtrl.text = data['phone'] ?? '';
-      _emailCtrl.text = data['email'] ?? '';
-      _nidCtrl.text = data['nidNumber'] ?? '';
-      _hasEdited = data['hasEdited'] ?? false;
+    if (tenant != null) {
+      _tenantDocId = tenant.id;
+      _nameCtrl.text = tenant.name;
+      _phoneCtrl.text = tenant.phone;
+      _emailCtrl.text = tenant.email;
+      _nidCtrl.text = tenant.nidNumber;
+      _hasEdited = tenant.hasEdited;
     }
 
+    if (!mounted) return;
     setState(() => _loading = false);
   }
 
@@ -322,6 +323,9 @@ class _TenantEditProfileScreenState extends State<TenantEditProfileScreen> {
         'name': _nameCtrl.text.trim(),
         'phone': _phoneCtrl.text.trim(),
         'email': _emailCtrl.text.trim(),
+        // Kept in sync so the record stays findable, but identity rides on
+        // userId, so changing the email no longer detaches the tenancy.
+        'emailLower': TenantModel.normaliseEmail(_emailCtrl.text),
         'nidNumber': _nidCtrl.text.trim(),
         'hasEdited': true,
       });
