@@ -559,6 +559,7 @@ class ListingService {
     // 5. অন্য pending requests এই room এর জন্য → rejected
     final otherRequests = await _db
         .collection('rentalRequests')
+        .where('landlordId', isEqualTo: request.landlordId)
         .where('roomId', isEqualTo: request.roomId)
         .where('status', isEqualTo: 'pending')
         .get();

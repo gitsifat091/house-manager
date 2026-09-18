@@ -1638,15 +1638,16 @@ class _PaymentCard extends StatelessWidget {
   });
 
   Future<TenantModel?> _getTenant() async {
-    final snap = await FirebaseFirestore.instance
+    // Read the record directly by id. Matching on name + room number both
+    // picked the wrong tenant when two shared a name, and could not be
+    // authorised, because the query carried no ownership filter.
+    if (payment.tenantId.isEmpty) return null;
+    final doc = await FirebaseFirestore.instance
         .collection('tenants')
-        .where('name', isEqualTo: payment.tenantName)
-        .where('roomNumber', isEqualTo: payment.roomNumber)
-        .limit(1)
+        .doc(payment.tenantId)
         .get();
-    if (snap.docs.isEmpty) return null;
-    return TenantModel.fromMap(
-        snap.docs.first.data(), snap.docs.first.id);
+    if (!doc.exists) return null;
+    return TenantModel.fromMap(doc.data()!, doc.id);
   }
 
   String _fmt(DateTime? dt) {
