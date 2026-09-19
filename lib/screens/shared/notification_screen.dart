@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Newest notifications to show. They are never cleaned up, so without a
+/// ceiling this list grows for as long as the account exists.
+const int _pageSize = 50;
+
+/// Enough to render the badge, which caps its own display at "9+".
+const int _badgeSampleSize = 20;
+
 class NotificationScreen extends StatelessWidget {
   final String userId;
   const NotificationScreen({super.key, required this.userId});
@@ -23,6 +30,7 @@ class NotificationScreen extends StatelessWidget {
             .collection('notifications')
             .where('userId', isEqualTo: userId)
             .orderBy('createdAt', descending: true)
+            .limit(_pageSize)
             .snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -187,10 +195,13 @@ class NotificationScreen extends StatelessWidget {
         .collection('notifications')
         .where('userId', isEqualTo: userId)
         .where('isRead', isEqualTo: false)
+        .limit(_pageSize)
         .get();
+    final batch = FirebaseFirestore.instance.batch();
     for (final doc in snap.docs) {
-      await doc.reference.update({'isRead': true});
+      batch.update(doc.reference, {'isRead': true});
     }
+    await batch.commit();
   }
 }
 
@@ -205,6 +216,7 @@ class NotificationBell extends StatelessWidget {
           .collection('notifications')
           .where('userId', isEqualTo: userId)
           .where('isRead', isEqualTo: false)
+          .limit(_badgeSampleSize)
           .snapshots(),
       builder: (context, snap) {
         final count = snap.data?.docs.length ?? 0;

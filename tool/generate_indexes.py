@@ -36,6 +36,10 @@ indexes = [
     idx("rentalRequests", ("tenantUserId", ASC), ("createdAt", DESC)),
     # Most recently active conversation first.
     idx("chatRooms", ("landlordId", ASC), ("lastMessageAt", DESC)),
+    # The notification list. This one already existed in the project before
+    # the index file did, which is how the unbounded query behind it was
+    # noticed.
+    idx("notifications", ("userId", ASC), ("createdAt", DESC)),
 ]
 
 # The public to-let search. isActive is always filtered; the other four are
