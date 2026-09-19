@@ -2,7 +2,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/payment_model.dart';
 import '../models/tenant_model.dart';
-import 'notification_service.dart';
 
 class PaymentService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -41,15 +40,17 @@ class PaymentService {
   }
 
   // Tenant submits payment
+  // Notifications for these transitions are produced by Cloud Functions
+  // watching the payments collection, not written here. The app has no
+  // credentials to send a push, and letting clients write the notifications
+  // collection meant anyone could address one to anyone.
+  // See functions/src/index.ts.
+
   Future<void> submitPayment(String paymentId, {
     required String paymentMethod,
     required String transactionId,
     String? note,
   }) async {
-    // Get payment info first
-    final doc = await _db.collection('payments').doc(paymentId).get();
-    final payment = PaymentModel.fromMap(doc.data()!, doc.id);
-
     await _db.collection('payments').doc(paymentId).update({
       'status': 'submitted',
       'submittedAt': DateTime.now().millisecondsSinceEpoch,
@@ -57,37 +58,16 @@ class PaymentService {
       'transactionId': transactionId,
       'note': note,
     });
-
-    // Notify landlord
-    await NotificationService.notifyLandlord(
-      landlordId: payment.landlordId,
-      title: '💰 নতুন পেমেন্ট জমা',
-      body: '${payment.tenantName} রুম ${payment.roomNumber} এর ভাড়া জমা দিয়েছে',
-    );
   }
 
   Future<void> approvePayment(String paymentId) async {
-    final doc = await _db.collection('payments').doc(paymentId).get();
-    final payment = PaymentModel.fromMap(doc.data()!, doc.id);
-
     await _db.collection('payments').doc(paymentId).update({
       'status': 'paid',
       'paidAt': DateTime.now().millisecondsSinceEpoch,
     });
-
-    // Notify tenant
-    await NotificationService.notifyTenant(
-      tenantId: payment.tenantId,
-      title: '✅ পেমেন্ট অনুমোদিত',
-      body: '${payment.monthName} ${payment.year} এর ভাড়া পরিশোধ নিশ্চিত হয়েছে',
-      type: 'payment_approved',
-    );
   }
 
   Future<void> rejectPayment(String paymentId, String reason) async {
-    final doc = await _db.collection('payments').doc(paymentId).get();
-    final payment = PaymentModel.fromMap(doc.data()!, doc.id);
-
     await _db.collection('payments').doc(paymentId).update({
       'status': 'rejected',
       'rejectionReason': reason,
@@ -95,14 +75,6 @@ class PaymentService {
       'transactionId': null,
       'paymentMethod': null,
     });
-
-    // Notify tenant
-    await NotificationService.notifyTenant(
-      tenantId: payment.tenantId,
-      title: '❌ পেমেন্ট বাতিল',
-      body: 'কারণ: $reason',
-      type: 'payment_rejected',
-    );
   }
 
   // Reset to pending

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import 'notification_service.dart';
 import 'public_profile_service.dart';
 import 'tenant_identity_service.dart';
 
@@ -191,8 +192,11 @@ class AuthService extends ChangeNotifier {
 
   // Logout
   Future<void> logout() async {
+    final uid = _currentUser?.uid;
     TenantIdentityService.reset();
     PublicProfileService.reset();
+    // Stop this device receiving the previous account's notifications.
+    if (uid != null) await NotificationService.instance.releaseFor(uid);
     await _auth.signOut();
     _currentUser = null;
     _loadError = null;

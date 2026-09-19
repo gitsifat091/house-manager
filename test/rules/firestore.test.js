@@ -696,29 +696,25 @@ describe('notifications', () => {
     );
   });
 
-  it('a tenant may notify its landlord', async () => {
-    await assertSucceeds(
+  it('no client may create one, not even for itself', async () => {
+    // Cloud Functions write these with admin credentials, which bypass rules.
+    // Letting clients create them was a way to push to a stranger's phone.
+    await assertFails(
       addDoc(collection(asTenantA(), 'notifications'), {
         userId: LANDLORD_A, title: 'Payment', body: 'Submitted',
-        isRead: false, createdAt: 1, type: 'payment',
+        isRead: false, createdAt: 1, type: 'payment_submitted',
       }),
     );
-  });
-
-  it('cannot create one already marked read', async () => {
     await assertFails(
       addDoc(collection(asTenantA(), 'notifications'), {
-        userId: LANDLORD_A, title: 'x', body: 'y',
-        isRead: true, createdAt: 1, type: 'payment',
+        userId: TENANT_A, title: 'x', body: 'y',
+        isRead: false, createdAt: 1, type: 'notice',
       }),
     );
-  });
-
-  it('cannot stuff extra fields into a notification', async () => {
     await assertFails(
-      addDoc(collection(asTenantA(), 'notifications'), {
-        userId: LANDLORD_A, title: 'x', body: 'y', isRead: false,
-        createdAt: 1, type: 'payment', payload: 'unexpected',
+      addDoc(collection(asLandlordA(), 'notifications'), {
+        userId: TENANT_A, title: 'x', body: 'y',
+        isRead: false, createdAt: 1, type: 'notice',
       }),
     );
   });
@@ -735,6 +731,31 @@ describe('notifications', () => {
       updateDoc(doc(asLandlordA(), 'notifications', 'notif-a'),
         { body: 'changed' }),
     );
+  });
+
+  it('cannot mark somebody else notification read', async () => {
+    await assertFails(
+      updateDoc(doc(asTenantA(), 'notifications', 'notif-a'),
+        { isRead: true }),
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+describe('device tokens', () => {
+  it('registers a token on its own account', async () => {
+    await assertSucceeds(setDoc(doc(asTenantA(), 'users', TENANT_A),
+      { fcmTokens: ['token-abc'], tokenUpdatedAt: 1 }, { merge: true }));
+  });
+
+  it('cannot register a token on somebody else account', async () => {
+    await assertFails(setDoc(doc(asTenantA(), 'users', LANDLORD_A),
+      { fcmTokens: ['token-abc'] }, { merge: true }));
+  });
+
+  it('cannot read another account tokens', async () => {
+    // users is owner-only, so a token cannot be harvested to target a push.
+    await assertFails(getDoc(doc(asTenantB(), 'users', TENANT_A)));
   });
 });
 

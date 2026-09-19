@@ -12,7 +12,7 @@ record, including NID numbers, phone numbers, rent amounts and private chats.
 cd test/rules && npm install && npm test
 ```
 
-This starts the Firestore emulator and runs 142 tests against the real rules
+This starts the Firestore emulator and runs 144 tests against the real rules
 file. No project credentials are needed and no live data is touched.
 
 There are two suites:
@@ -29,8 +29,12 @@ Change a rule, run the tests. They caught two real bugs already (see
 ## Deploying
 
 ```bash
-firebase deploy --only firestore:rules,storage:rules
+firebase deploy --only firestore:rules,storage:rules,functions
 ```
+
+Cloud Functions produce every notification now, and the rules deny clients
+writing that collection, so the two go out together — see
+[PUSH_NOTIFICATIONS.md](PUSH_NOTIFICATIONS.md). Functions need the Blaze plan.
 
 **Ship the app update at the same time.** These rules require query shapes the
 older build does not use, so an old client will hit permission errors against
@@ -116,13 +120,9 @@ fixes picking the wrong tenant when two share a name.
 
 These are real and deliberate. They are the next things to fix.
 
-**Anyone signed in can create a notification addressed to anyone.** A tenant
-submitting a payment writes a notification addressed to their landlord, so
-creation cannot be limited to the caller's own uid. The shape is validated
-(no extra fields, `isRead` must be false) and reads are restricted to the
-addressee, but a determined user could spam another user's notification list.
-Moving notification writes into a Cloud Function closes this properly, and is
-the same change needed to make push notifications actually send.
+Notification spam used to be listed here. It is closed: Cloud Functions write
+every notification now, and clients are denied `create` on the collection
+outright.
 
 **Profile pictures are base64 blobs, now inside the public profile.** At
 300x300 and quality 50 that is tens of kilobytes of base64 pulled on every

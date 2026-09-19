@@ -10,9 +10,19 @@ import 'models/user_model.dart';
 import 'services/settings_service.dart';
 import 'services/notification_service.dart';
 
+/// Shows foreground notifications from anywhere in the app.
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Has to happen before runApp and exactly once. It used to run inside a
+  // widget build, which re-registered the handler on every rebuild.
+  NotificationService.registerBackgroundHandler();
+  NotificationService.messengerKey = scaffoldMessengerKey;
+
   runApp(const HouseManagerApp());
 }
 
@@ -30,6 +40,7 @@ class HouseManagerApp extends StatelessWidget {
       child: Consumer<SettingsService>(
         builder: (context, settings, _) => MaterialApp(
           title: 'House Manager',
+          scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme.copyWith(
             colorScheme: ColorScheme.fromSeed(
@@ -51,13 +62,36 @@ class HouseManagerApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  String? _notificationsFor;
+
+  /// Sets notifications up once per signed-in account.
+  ///
+  /// This used to be called straight from build(), so it re-ran on every
+  /// rebuild, adding another token-refresh and another foreground listener
+  /// each time.
+  void _syncNotifications(String? uid) {
+    if (uid == _notificationsFor) return;
+    _notificationsFor = uid;
+    if (uid == null) return;
+    // Deferred so it never runs during a build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.initialize(uid);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
       builder: (context, auth, _) {
+        _syncNotifications(auth.currentUser?.uid);
         if (auth.isLoading) {
           return Scaffold(
             body: Center(
@@ -104,11 +138,8 @@ class AuthWrapper extends StatelessWidget {
         }
         // Role-based routing
         if (auth.currentUser!.role == UserRole.landlord) {
-          // Initialize notifications
-          NotificationService().initialize(auth.currentUser!.uid);
           return const LandlordDashboard();
         } else {
-          NotificationService().initialize(auth.currentUser!.uid);
           return const TenantDashboard();
         }
       },
