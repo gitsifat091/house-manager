@@ -364,14 +364,43 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollCtrl = ScrollController();
   final _service = ChatService();
 
+  /// How many messages to show. Raised to reach further back, rather than
+  /// streaming the room's whole history the way this screen used to.
+  int _limit = ChatService.messagePageSize;
+
+  /// Message count at the last build, so a new arrival can be told apart from
+  /// a widening window.
+  int _lastCount = 0;
+
+  /// Whether the view is at the bottom. Only then should a new message scroll
+  /// it, otherwise reading older messages yanks you back down.
+  bool _atBottom = true;
+
   @override
   void initState() {
     super.initState();
     _service.markRead(widget.chatRoomId, widget.isLandlord);
+    _scrollCtrl.addListener(_trackPosition);
+  }
+
+  void _trackPosition() {
+    if (!_scrollCtrl.hasClients) return;
+    final pos = _scrollCtrl.position;
+    _atBottom = pos.pixels >= pos.maxScrollExtent - 80;
+  }
+
+  void _loadOlder() {
+    setState(() => _limit += ChatService.messagePageSize);
+  }
+
+  void _scrollToBottom() {
+    if (!_scrollCtrl.hasClients) return;
+    _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
   }
 
   @override
   void dispose() {
+    _scrollCtrl.removeListener(_trackPosition);
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -454,7 +483,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder<List<MessageModel>>(
-              stream: _service.getMessages(widget.chatRoomId),
+              stream: _service.getMessages(widget.chatRoomId, limit: _limit),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -492,19 +521,41 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 }
 
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (_scrollCtrl.hasClients) {
-                    _scrollCtrl.jumpTo(
-                        _scrollCtrl.position.maxScrollExtent);
-                  }
-                });
+                // A new message should scroll the view; widening the window
+                // to read history should not.
+                final grew = messages.length > _lastCount;
+                final isFirstLoad = _lastCount == 0;
+                _lastCount = messages.length;
+
+                if (grew && (isFirstLoad || _atBottom)) {
+                  WidgetsBinding.instance
+                      .addPostFrameCallback((_) => _scrollToBottom());
+                }
+
+                // Offer older messages only when the window came back full,
+                // which means there may be more behind it.
+                final hasMore = messages.length >= _limit;
 
                 return ListView.builder(
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 16),
-                  itemCount: messages.length,
-                  itemBuilder: (ctx, i) {
+                  itemCount: messages.length + (hasMore ? 1 : 0),
+                  itemBuilder: (ctx, index) {
+                    if (hasMore && index == 0) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: TextButton.icon(
+                            onPressed: _loadOlder,
+                            icon: const Icon(Icons.history_rounded, size: 18),
+                            label: const Text('আগের message দেখুন'),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final i = hasMore ? index - 1 : index;
                     final msg = messages[i];
                     final isMe = msg.senderId == widget.currentUserId;
 

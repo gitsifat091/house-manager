@@ -5,10 +5,16 @@ import '../models/room_model.dart';
 class TenantService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<TenantModel>> getTenants(String landlordId) {
+  static const int pageSize = 200;
+
+  Stream<List<TenantModel>> getTenants(
+    String landlordId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('tenants')
         .where('landlordId', isEqualTo: landlordId)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => TenantModel.fromMap(d.data(), d.id))

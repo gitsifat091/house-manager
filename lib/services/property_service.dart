@@ -7,10 +7,17 @@ class PropertyService {
 
   // ── Properties ──────────────────────────────
 
-  Stream<List<PropertyModel>> getProperties(String landlordId) {
+  static const int propertyPageSize = 100;
+  static const int roomPageSize = 300;
+
+  Stream<List<PropertyModel>> getProperties(
+    String landlordId, {
+    int limit = propertyPageSize,
+  }) {
     return _db
         .collection('properties')
         .where('landlordId', isEqualTo: landlordId)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => PropertyModel.fromMap(d.data(), d.id))
@@ -39,10 +46,14 @@ class PropertyService {
 
   // ── Rooms ────────────────────────────────────
 
-  Stream<List<RoomModel>> getRooms(String propertyId) {
+  Stream<List<RoomModel>> getRooms(
+    String propertyId, {
+    int limit = roomPageSize,
+  }) {
     return _db
         .collection('rooms')
         .where('propertyId', isEqualTo: propertyId)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => RoomModel.fromMap(d.data(), d.id))

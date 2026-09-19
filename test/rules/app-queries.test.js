@@ -21,6 +21,7 @@ import {
   collection,
   query,
   where,
+  orderBy,
   limit,
   writeBatch,
   runTransaction,
@@ -165,10 +166,22 @@ describe('landlord dashboard queries', () => {
       where('isActive', '==', true))));
   });
 
-  it('PaymentService.getPayments', async () => {
+  it('PaymentService.getPayments, unfiltered and ordered', async () => {
     await assertSucceeds(getDocs(query(
       collection(asLandlord(), 'payments'),
-      where('landlordId', '==', LANDLORD))));
+      where('landlordId', '==', LANDLORD),
+      orderBy('year', 'desc'),
+      orderBy('month', 'desc'),
+      limit(200))));
+  });
+
+  it('PaymentService.getPayments, scoped to one month', async () => {
+    await assertSucceeds(getDocs(query(
+      collection(asLandlord(), 'payments'),
+      where('landlordId', '==', LANDLORD),
+      where('month', '==', 1),
+      where('year', '==', 2026),
+      limit(200))));
   });
 
   it('PaymentService.getPaymentSummary', async () => {
@@ -182,19 +195,26 @@ describe('landlord dashboard queries', () => {
   it('UtilityService.getLandlordBills', async () => {
     await assertSucceeds(getDocs(query(
       collection(asLandlord(), 'utilities'),
-      where('landlordId', '==', LANDLORD))));
+      where('landlordId', '==', LANDLORD),
+      orderBy('year', 'desc'),
+      orderBy('month', 'desc'),
+      limit(200))));
   });
 
   it('MaintenanceService.getRequests', async () => {
     await assertSucceeds(getDocs(query(
       collection(asLandlord(), 'maintenance'),
-      where('landlordId', '==', LANDLORD))));
+      where('landlordId', '==', LANDLORD),
+      orderBy('createdAt', 'desc'),
+      limit(100))));
   });
 
   it('NoticeService.getNotices', async () => {
     await assertSucceeds(getDocs(query(
       collection(asLandlord(), 'notices'),
-      where('landlordId', '==', LANDLORD))));
+      where('landlordId', '==', LANDLORD),
+      orderBy('createdAt', 'desc'),
+      limit(100))));
   });
 
   it('RulesService.getRules', async () => {
@@ -241,7 +261,9 @@ describe('landlord dashboard queries', () => {
   it('ChatService.getLandlordChats', async () => {
     await assertSucceeds(getDocs(query(
       collection(asLandlord(), 'chatRooms'),
-      where('landlordId', '==', LANDLORD))));
+      where('landlordId', '==', LANDLORD),
+      orderBy('lastMessageAt', 'desc'),
+      limit(100))));
   });
 
   it('landlord_edit_tenant finds the tenant rooms', async () => {
@@ -285,7 +307,10 @@ describe('tenant screen queries', () => {
   it('PaymentService.getTenantPayments', async () => {
     await assertSucceeds(getDocs(query(
       collection(asTenant(), 'payments'),
-      where('tenantId', '==', REC))));
+      where('tenantId', '==', REC),
+      orderBy('year', 'desc'),
+      orderBy('month', 'desc'),
+      limit(60))));
   });
 
   it('tenant payment existence check', async () => {
@@ -299,13 +324,18 @@ describe('tenant screen queries', () => {
   it('UtilityService.getTenantBills', async () => {
     await assertSucceeds(getDocs(query(
       collection(asTenant(), 'utilities'),
-      where('tenantId', '==', REC))));
+      where('tenantId', '==', REC),
+      orderBy('year', 'desc'),
+      orderBy('month', 'desc'),
+      limit(60))));
   });
 
   it('MaintenanceService.getTenantRequests', async () => {
     await assertSucceeds(getDocs(query(
       collection(asTenant(), 'maintenance'),
-      where('tenantId', '==', REC))));
+      where('tenantId', '==', REC),
+      orderBy('createdAt', 'desc'),
+      limit(100))));
   });
 
   it('tenant reads landlord notices', async () => {
@@ -319,6 +349,13 @@ describe('tenant screen queries', () => {
       collection(asTenant(), 'rules'),
       where('landlordId', '==', LANDLORD),
       where('isActive', '==', true))));
+  });
+
+  it('ChatService.getMessages, newest first under a limit', async () => {
+    await assertSucceeds(getDocs(query(
+      collection(asTenant(), 'chatRooms', 'chat-1', 'messages'),
+      orderBy('createdAt', 'desc'),
+      limit(50))));
   });
 
   it('ChatService.getTenantChat', async () => {
@@ -347,7 +384,17 @@ describe('tenant screen queries', () => {
       where('division', '==', 'Dhaka'),
       where('district', '==', 'Dhaka'),
       where('thana', '==', 'Mirpur'),
-      where('roomType', '==', 'Family'))));
+      where('roomType', '==', 'Family'),
+      orderBy('createdAt', 'desc'),
+      limit(150))));
+  });
+
+  it('ListingService.getTenantRequests', async () => {
+    await assertSucceeds(getDocs(query(
+      collection(asTenant(), 'rentalRequests'),
+      where('tenantUserId', '==', TENANT_UID),
+      orderBy('createdAt', 'desc'),
+      limit(100))));
   });
 
   it('notification badge query', async () => {

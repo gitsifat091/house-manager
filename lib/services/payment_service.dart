@@ -6,37 +6,67 @@ import '../models/tenant_model.dart';
 class PaymentService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<PaymentModel>> getPayments(String landlordId) {
-    return _db
-        .collection('payments')
-        .where('landlordId', isEqualTo: landlordId)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => PaymentModel.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) {
-            // Year → Month → paidAt time (latest first)
-            if (a.year != b.year) return b.year.compareTo(a.year);
-            if (a.month != b.month) return b.month.compareTo(a.month);
-            // Same month — paidAt বা submittedAt দিয়ে sort
-            final aTime = a.paidAt ?? a.submittedAt ?? DateTime(a.year, a.month);
-            final bTime = b.paidAt ?? b.submittedAt ?? DateTime(b.year, b.month);
-            return bTime.compareTo(aTime);
-          }));
+  /// Default ceiling for a landlord's payment list.
+  ///
+  /// Every one of these streams used to be unbounded and sorted in Dart, so a
+  /// screen showing one month still downloaded every payment ever recorded.
+  /// Firestore bills per document read, so that cost grew forever.
+  static const int landlordPageSize = 200;
+  static const int tenantPageSize = 60;
+
+  /// Payments for a landlord, newest period first.
+  ///
+  /// Pass [month] and [year] to let Firestore do the filtering. That path is
+  /// equality-only, so it needs no composite index and returns one month
+  /// instead of the whole history.
+  Stream<List<PaymentModel>> getPayments(
+    String landlordId, {
+    int? month,
+    int? year,
+    int limit = landlordPageSize,
+  }) {
+    Query<Map<String, dynamic>> query =
+        _db.collection('payments').where('landlordId', isEqualTo: landlordId);
+
+    if (month != null && year != null) {
+      query = query.where('month', isEqualTo: month).where('year', isEqualTo: year);
+    } else {
+      query = query
+          .orderBy('year', descending: true)
+          .orderBy('month', descending: true);
+    }
+
+    return query.limit(limit).snapshots().map((snap) => snap.docs
+        .map((d) => PaymentModel.fromMap(d.data(), d.id))
+        .toList()
+      // Firestore has ordered by period already; this only settles ties
+      // within it, which it cannot do because the time is spread across two
+      // nullable fields.
+      ..sort((a, b) {
+        if (a.year != b.year) return b.year.compareTo(a.year);
+        if (a.month != b.month) return b.month.compareTo(a.month);
+        final aTime = a.paidAt ?? a.submittedAt ?? DateTime(a.year, a.month);
+        final bTime = b.paidAt ?? b.submittedAt ?? DateTime(b.year, b.month);
+        return bTime.compareTo(aTime);
+      }));
   }
 
-  Stream<List<PaymentModel>> getTenantPayments(String tenantId) {
+  /// A tenant's own payments, newest first. The default covers five years of
+  /// monthly rent.
+  Stream<List<PaymentModel>> getTenantPayments(
+    String tenantId, {
+    int limit = tenantPageSize,
+  }) {
     return _db
         .collection('payments')
         .where('tenantId', isEqualTo: tenantId)
+        .orderBy('year', descending: true)
+        .orderBy('month', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => PaymentModel.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) {
-            if (a.year != b.year) return b.year.compareTo(a.year);
-            return b.month.compareTo(a.month);
-          }));
+            .toList());
   }
 
   // Tenant submits payment

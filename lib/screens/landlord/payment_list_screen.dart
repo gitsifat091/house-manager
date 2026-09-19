@@ -1200,19 +1200,22 @@ class _PaymentListScreenState extends State<PaymentListScreen>
       body: FadeTransition(
         opacity: _fadeAnim,
         child: StreamBuilder<List<PaymentModel>>(
-          stream: service.getPayments(user.uid),
+          // Filtered in the query rather than after the fact. This used to
+          // stream every payment the landlord had ever recorded and then keep
+          // one month of it.
+          stream: service.getPayments(
+            user.uid,
+            month: _selectedMonth,
+            year: _selectedYear,
+          ),
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
               return Center(
                   child: CircularProgressIndicator(color: primary));
             }
 
-            final all = snap.data ?? [];
-            final payments = all
-                .where((p) =>
-                    p.month == _selectedMonth &&
-                    p.year == _selectedYear)
-                .toList();
+            // Already scoped to the selected month by the query.
+            final payments = snap.data ?? [];
 
             // Stats
             double totalPaid = 0;

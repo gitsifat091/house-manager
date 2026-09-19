@@ -4,26 +4,36 @@ import '../models/maintenance_model.dart';
 class MaintenanceService {
   final _db = FirebaseFirestore.instance;
 
-  Stream<List<MaintenanceModel>> getRequests(String landlordId) {
+  static const int pageSize = 100;
+
+  Stream<List<MaintenanceModel>> getRequests(
+    String landlordId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('maintenance')
         .where('landlordId', isEqualTo: landlordId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => MaintenanceModel.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
+            .toList());
   }
 
-  Stream<List<MaintenanceModel>> getTenantRequests(String tenantId) {
+  Stream<List<MaintenanceModel>> getTenantRequests(
+    String tenantId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('maintenance')
         .where('tenantId', isEqualTo: tenantId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => MaintenanceModel.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
+            .toList());
   }
 
   Future<void> addRequest(MaintenanceModel req) async {

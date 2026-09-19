@@ -1340,17 +1340,9 @@ class _TenantPaymentScreenState extends State<TenantPaymentScreen> {
     return Scaffold(
       backgroundColor: bg,
       body: StreamBuilder<List<PaymentModel>>(
-        stream: FirebaseFirestore.instance
-            .collection('payments')
-            .where('tenantId', isEqualTo: _tenantId)
-            .snapshots()
-            .map((snap) => snap.docs
-                .map((d) => PaymentModel.fromMap(d.data(), d.id))
-                .toList()
-              ..sort((a, b) {
-                if (a.year != b.year) return b.year.compareTo(a.year);
-                return b.month.compareTo(a.month);
-              })),
+        // Ordered and bounded by the service. The default covers five years
+        // of monthly rent, which is well past any real tenancy here.
+        stream: PaymentService().getTenantPayments(_tenantId!),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: primary));

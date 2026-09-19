@@ -401,18 +401,28 @@ class ListingService {
   // ── Listings ────────────────────────────────────────────────
 
   /// Landlord এর সব listings
-  Stream<List<ListingModel>> getLandlordListings(String landlordId) {
+  static const int pageSize = 100;
+
+  /// How many public listings a search returns.
+  ///
+  /// The rent filter is applied in Dart after the fetch, so this is the number
+  /// of documents read, not the number shown. Narrowing by district first
+  /// keeps the two close.
+  static const int searchPageSize = 150;
+
+  Stream<List<ListingModel>> getLandlordListings(
+    String landlordId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('listings')
         .where('landlordId', isEqualTo: landlordId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
-        .map((snap) {
-          final list = snap.docs
-              .map((d) => ListingModel.fromMap(d.data(), d.id))
-              .toList();
-          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return list;
-        });
+        .map((snap) => snap.docs
+            .map((d) => ListingModel.fromMap(d.data(), d.id))
+            .toList());
   }
 
   /// Public listings — filter by thana/district/division/maxRent
@@ -441,12 +451,13 @@ class ListingService {
       query = query.where('roomType', isEqualTo: roomType);
     }
 
-    final snap = await query.get();
+    final snap = await query
+        .orderBy('createdAt', descending: true)
+        .limit(searchPageSize)
+        .get();
     var results = snap.docs
         .map((d) => ListingModel.fromMap(d.data() as Map<String, dynamic>, d.id))
         .toList();
-    // Client-side sort (Firestore composite index এড়াতে)
-    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     // Client-side rent filter (Firestore range + inequality index এড়াতে)
     if (minRent != null) results = results.where((l) => l.rentAmount >= minRent).toList();
@@ -474,33 +485,35 @@ class ListingService {
   // ── Rental Requests ─────────────────────────────────────────
 
   /// Landlord এর কাছে আসা requests
-  Stream<List<RentalRequestModel>> getLandlordRequests(String landlordId) {
+  Stream<List<RentalRequestModel>> getLandlordRequests(
+    String landlordId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('rentalRequests')
         .where('landlordId', isEqualTo: landlordId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
-        .map((snap) {
-          final list = snap.docs
-              .map((d) => RentalRequestModel.fromMap(d.data(), d.id))
-              .toList();
-          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return list;
-        });
+        .map((snap) => snap.docs
+            .map((d) => RentalRequestModel.fromMap(d.data(), d.id))
+            .toList());
   }
 
   /// Tenant এর পাঠানো requests
-  Stream<List<RentalRequestModel>> getTenantRequests(String tenantUserId) {
+  Stream<List<RentalRequestModel>> getTenantRequests(
+    String tenantUserId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('rentalRequests')
         .where('tenantUserId', isEqualTo: tenantUserId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
-        .map((snap) {
-          final list = snap.docs
-              .map((d) => RentalRequestModel.fromMap(d.data(), d.id))
-              .toList();
-          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return list;
-        });
+        .map((snap) => snap.docs
+            .map((d) => RentalRequestModel.fromMap(d.data(), d.id))
+            .toList());
   }
 
   Future<void> sendRequest(RentalRequestModel request) async {
