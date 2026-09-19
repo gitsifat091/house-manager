@@ -1,15 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/tenant_model.dart';
 import '../models/room_model.dart';
-import 'tenant_identity_service.dart';
 
 class TenantService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<TenantModel>> getTenants(String landlordId) {
+  static const int pageSize = 200;
+
+  Stream<List<TenantModel>> getTenants(
+    String landlordId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('tenants')
         .where('landlordId', isEqualTo: landlordId)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => TenantModel.fromMap(d.data(), d.id))
@@ -17,16 +22,13 @@ class TenantService {
   }
 
   Future<void> addTenant(TenantModel tenant, String landlordId) async {
-    // If this person already has an account, link the record to it now.
-    // If not, it stays unowned and is claimed when they first sign in.
-    final userId = tenant.userId.isNotEmpty
-        ? tenant.userId
-        : await TenantIdentityService.uidForEmail(tenant.email);
-
-    // Save tenant
+    // The record stays unowned until that person signs in and claims it.
+    // Looking their uid up here would mean querying other people's user
+    // records by email, which is exactly what publicProfiles exists to stop.
+    // TenantIdentityService.claimTenancies does the linking at sign-in.
     final ref = await _db.collection('tenants').add({
       ...tenant.toMap(),
-      'userId': userId,
+      'userId': tenant.userId,
       'landlordId': landlordId,
     });
 

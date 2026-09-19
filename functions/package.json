@@ -1,0 +1,26 @@
+{
+  "name": "house-manager-functions",
+  "description": "Cloud Functions for House Manager push notifications",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^20.16.0"
+  }
+}

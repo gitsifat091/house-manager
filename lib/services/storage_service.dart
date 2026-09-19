@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'public_profile_service.dart';
 
 class StorageService {
   final _picker = ImagePicker();
@@ -30,6 +31,9 @@ class StorageService {
           .collection('users')
           .doc(userId)
           .update({'photoUrl': dataUrl});
+
+      // The copy other people are allowed to see.
+      await PublicProfileService.updatePhoto(uid: userId, photoUrl: dataUrl);
 
       return dataUrl;
     } catch (e) {

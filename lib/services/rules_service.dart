@@ -4,11 +4,19 @@ import '../models/rule_model.dart';
 class RulesService {
   final _db = FirebaseFirestore.instance;
 
-  Stream<List<RuleModel>> getRules(String landlordId) {
+  static const int pageSize = 100;
+
+  /// Sorted by category, which is an enum index rather than a stored field, so
+  /// Firestore cannot order it. The limit still bounds the read.
+  Stream<List<RuleModel>> getRules(
+    String landlordId, {
+    int limit = pageSize,
+  }) {
     return _db
         .collection('rules')
         .where('landlordId', isEqualTo: landlordId)
         .where('isActive', isEqualTo: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => RuleModel.fromMap(d.data(), d.id))

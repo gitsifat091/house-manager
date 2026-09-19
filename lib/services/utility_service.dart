@@ -4,32 +4,39 @@ import '../models/utility_model.dart';
 class UtilityService {
   final _db = FirebaseFirestore.instance;
 
-  Stream<List<UtilityModel>> getLandlordBills(String landlordId) {
+  static const int landlordPageSize = 200;
+  static const int tenantPageSize = 60;
+
+  Stream<List<UtilityModel>> getLandlordBills(
+    String landlordId, {
+    int limit = landlordPageSize,
+  }) {
     return _db
         .collection('utilities')
         .where('landlordId', isEqualTo: landlordId)
+        .orderBy('year', descending: true)
+        .orderBy('month', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => UtilityModel.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) {
-            if (a.year != b.year) return b.year.compareTo(a.year);
-            return b.month.compareTo(a.month);
-          }));
+            .toList());
   }
 
-  Stream<List<UtilityModel>> getTenantBills(String tenantId) {
+  Stream<List<UtilityModel>> getTenantBills(
+    String tenantId, {
+    int limit = tenantPageSize,
+  }) {
     return _db
         .collection('utilities')
         .where('tenantId', isEqualTo: tenantId)
+        .orderBy('year', descending: true)
+        .orderBy('month', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => UtilityModel.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) {
-            if (a.year != b.year) return b.year.compareTo(a.year);
-            return b.month.compareTo(a.month);
-          }));
+            .toList());
   }
 
   Future<void> addBill(UtilityModel bill) async {

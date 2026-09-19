@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/user_model.dart';
 import '../../../services/chat_service.dart';
 import '../shared/chat_screen.dart';
+import '../../services/public_profile_service.dart';
 import '../../services/tenant_identity_service.dart';
 
 class TenantChatScreen extends StatefulWidget {
@@ -35,12 +35,9 @@ class _TenantChatScreenState extends State<TenantChatScreen> {
       return;
     }
 
-    // Landlord নাম নাও
-    final landlordDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(tenant.landlordId)
-        .get();
-    _landlordName = landlordDoc.data()?['name'] ?? 'বাড়ীওয়ালা';
+    // Landlord নাম নাও — display name only, from the public profile.
+    _landlordName =
+        await PublicProfileService.nameOf(tenant.landlordId) ?? 'বাড়ীওয়ালা';
 
     // ChatRoom খোঁজো বা বানাও
     final chatService = ChatService();

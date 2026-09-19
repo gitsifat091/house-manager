@@ -5,6 +5,7 @@
 // Runs against the Firestore emulator via `firebase emulators:exec`, so it
 // needs no real project and touches no real data.
 
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import {
@@ -91,6 +92,16 @@ beforeEach(async () => {
     });
     await setDoc(doc(db, 'users', STRANGER), {
       uid: STRANGER, role: 'tenant', name: 'Carol', email: UNCLAIMED_EMAIL,
+    });
+
+    await setDoc(doc(db, 'publicProfiles', LANDLORD_A), {
+      name: 'Landlord A', photoUrl: null,
+    });
+    await setDoc(doc(db, 'publicProfiles', LANDLORD_B), {
+      name: 'Landlord B', photoUrl: null,
+    });
+    await setDoc(doc(db, 'publicProfiles', TENANT_A), {
+      name: 'Alice', photoUrl: null,
     });
 
     await setDoc(doc(db, 'properties', PROP_A), {
@@ -194,6 +205,10 @@ describe('unauthenticated access', () => {
 
   it('cannot read users', async () => {
     await assertFails(getDoc(doc(asAnon(), 'users', LANDLORD_A)));
+  });
+
+  it('cannot read public profiles either', async () => {
+    await assertFails(getDoc(doc(asAnon(), 'publicProfiles', LANDLORD_A)));
   });
 
   it('cannot write anything', async () => {
@@ -488,6 +503,67 @@ describe('claiming an unowned tenant record', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────
+describe('profile visibility', () => {
+  it('anyone signed in reads a public profile', async () => {
+    await assertSucceeds(
+      getDoc(doc(asTenantB(), 'publicProfiles', LANDLORD_A)));
+  });
+
+  it('a stranger sees only a name and a picture', async () => {
+    // What another user actually receives. Guards against the collection
+    // quietly growing into a second copy of the user record.
+    const snap = await getDoc(doc(asTenantB(), 'publicProfiles', LANDLORD_A));
+    assert.deepEqual(Object.keys(snap.data()).sort(), ['name', 'photoUrl']);
+  });
+
+  it('cannot read a stranger full user record', async () => {
+    await assertFails(getDoc(doc(asTenantB(), 'users', LANDLORD_A)));
+  });
+
+  it('cannot read another tenant full user record', async () => {
+    await assertFails(getDoc(doc(asTenantA(), 'users', TENANT_B)));
+  });
+
+  it('a tenant reads its own landlord record, for contact details', async () => {
+    await assertSucceeds(getDoc(doc(asTenantA(), 'users', LANDLORD_A)));
+  });
+
+  it('a tenant cannot read a landlord it does not rent from', async () => {
+    await assertFails(getDoc(doc(asTenantA(), 'users', LANDLORD_B)));
+  });
+
+  it('a landlord cannot read its own tenant full user record', async () => {
+    await assertFails(getDoc(doc(asLandlordA(), 'users', TENANT_A)));
+  });
+
+  it('the users collection cannot be queried at all', async () => {
+    await assertFails(getDocs(query(
+      collection(asLandlordA(), 'users'),
+      where('email', '==', TENANT_A_EMAIL))));
+    await assertFails(getDocs(collection(asLandlordA(), 'users')));
+  });
+
+  it('cannot write somebody else public profile', async () => {
+    await assertFails(setDoc(doc(asTenantA(), 'publicProfiles', LANDLORD_A),
+      { name: 'hacked', photoUrl: null }));
+  });
+
+  it('cannot smuggle extra fields into a public profile', async () => {
+    await assertFails(setDoc(doc(asTenantA(), 'publicProfiles', TENANT_A),
+      { name: 'Alice', photoUrl: null, phone: '01700000000' }));
+  });
+
+  it('cannot delete a public profile', async () => {
+    await assertFails(deleteDoc(doc(asTenantA(), 'publicProfiles', TENANT_A)));
+  });
+
+  it('still cannot promote itself to landlord', async () => {
+    await assertFails(
+      updateDoc(doc(asTenantA(), 'users', TENANT_A), { role: 'landlord' }));
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
 describe('chat', () => {
   it('participants read the room', async () => {
     await assertSucceeds(getDoc(doc(asLandlordA(), 'chatRooms', 'chat-a')));
@@ -620,29 +696,25 @@ describe('notifications', () => {
     );
   });
 
-  it('a tenant may notify its landlord', async () => {
-    await assertSucceeds(
+  it('no client may create one, not even for itself', async () => {
+    // Cloud Functions write these with admin credentials, which bypass rules.
+    // Letting clients create them was a way to push to a stranger's phone.
+    await assertFails(
       addDoc(collection(asTenantA(), 'notifications'), {
         userId: LANDLORD_A, title: 'Payment', body: 'Submitted',
-        isRead: false, createdAt: 1, type: 'payment',
+        isRead: false, createdAt: 1, type: 'payment_submitted',
       }),
     );
-  });
-
-  it('cannot create one already marked read', async () => {
     await assertFails(
       addDoc(collection(asTenantA(), 'notifications'), {
-        userId: LANDLORD_A, title: 'x', body: 'y',
-        isRead: true, createdAt: 1, type: 'payment',
+        userId: TENANT_A, title: 'x', body: 'y',
+        isRead: false, createdAt: 1, type: 'notice',
       }),
     );
-  });
-
-  it('cannot stuff extra fields into a notification', async () => {
     await assertFails(
-      addDoc(collection(asTenantA(), 'notifications'), {
-        userId: LANDLORD_A, title: 'x', body: 'y', isRead: false,
-        createdAt: 1, type: 'payment', payload: 'unexpected',
+      addDoc(collection(asLandlordA(), 'notifications'), {
+        userId: TENANT_A, title: 'x', body: 'y',
+        isRead: false, createdAt: 1, type: 'notice',
       }),
     );
   });
@@ -659,6 +731,31 @@ describe('notifications', () => {
       updateDoc(doc(asLandlordA(), 'notifications', 'notif-a'),
         { body: 'changed' }),
     );
+  });
+
+  it('cannot mark somebody else notification read', async () => {
+    await assertFails(
+      updateDoc(doc(asTenantA(), 'notifications', 'notif-a'),
+        { isRead: true }),
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+describe('device tokens', () => {
+  it('registers a token on its own account', async () => {
+    await assertSucceeds(setDoc(doc(asTenantA(), 'users', TENANT_A),
+      { fcmTokens: ['token-abc'], tokenUpdatedAt: 1 }, { merge: true }));
+  });
+
+  it('cannot register a token on somebody else account', async () => {
+    await assertFails(setDoc(doc(asTenantA(), 'users', LANDLORD_A),
+      { fcmTokens: ['token-abc'] }, { merge: true }));
+  });
+
+  it('cannot read another account tokens', async () => {
+    // users is owner-only, so a token cannot be harvested to target a push.
+    await assertFails(getDoc(doc(asTenantB(), 'users', TENANT_A)));
   });
 });
 

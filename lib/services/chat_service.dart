@@ -37,20 +37,25 @@ class ChatService {
     return ref.id;
   }
 
+  /// How many messages a chat loads at a time. The screen raises its own
+  /// limit to reach further back.
+  static const int messagePageSize = 50;
+  static const int roomPageSize = 100;
+
   // Landlord এর সব chat
-  Stream<List<ChatRoom>> getLandlordChats(String landlordId) {
+  Stream<List<ChatRoom>> getLandlordChats(
+    String landlordId, {
+    int limit = roomPageSize,
+  }) {
     return _db
         .collection('chatRooms')
         .where('landlordId', isEqualTo: landlordId)
+        .orderBy('lastMessageAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ChatRoom.fromMap(d.data(), d.id))
-            .toList()
-          ..sort((a, b) {
-            if (a.lastMessageAt == null) return 1;
-            if (b.lastMessageAt == null) return -1;
-            return b.lastMessageAt!.compareTo(a.lastMessageAt!);
-          }));
+            .toList());
   }
 
   // Tenant এর chat
@@ -64,16 +69,27 @@ class ChatService {
             : ChatRoom.fromMap(snap.docs.first.data(), snap.docs.first.id));
   }
 
-  // Messages stream
-  Stream<List<MessageModel>> getMessages(String chatRoomId) {
+  /// The most recent [limit] messages, oldest first for display.
+  ///
+  /// This used to stream every message a room had ever held, so a long
+  /// conversation re-downloaded its whole history on every open. Ordering
+  /// descending and reversing gets the newest ones under a limit; the screen
+  /// raises the limit to load older.
+  Stream<List<MessageModel>> getMessages(
+    String chatRoomId, {
+    int limit = messagePageSize,
+  }) {
     return _db
         .collection('chatRooms')
         .doc(chatRoomId)
         .collection('messages')
-        .orderBy('createdAt', descending: false)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => MessageModel.fromMap(d.data(), d.id))
+            .toList()
+            .reversed
             .toList());
   }
 
