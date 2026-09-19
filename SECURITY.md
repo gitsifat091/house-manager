@@ -12,7 +12,7 @@ record, including NID numbers, phone numbers, rent amounts and private chats.
 cd test/rules && npm install && npm test
 ```
 
-This starts the Firestore emulator and runs 144 tests against the real rules
+This starts the Firestore emulator and runs 152 tests against the real rules
 file. No project credentials are needed and no live data is touched.
 
 There are two suites:
@@ -120,9 +120,19 @@ fixes picking the wrong tenant when two share a name.
 
 These are real and deliberate. They are the next things to fix.
 
-Notification spam used to be listed here. It is closed: Cloud Functions write
-every notification now, and clients are denied `create` on the collection
-outright.
+**Clients can create a notification addressed to any uid.** This is meant to
+be closed — Cloud Functions write every notification and the rule denies
+client creates — but the functions are not deployed, because the project is
+on the Spark plan and Cloud Functions need Blaze. Until they are, the app
+writes these records itself, which means any signed-in user can put a
+notification in somebody else's list. The shape is validated and reads stay
+restricted to the addressee, so it cannot carry arbitrary data, but it is a
+spam vector.
+
+Everything involved is marked `INTERIM`: the rule in `firestore.rules`, the
+block in `NotificationService`, and the call sites in `PaymentService`. Once
+`firebase deploy --only functions` succeeds, set `allow create` back to
+`if false` and delete the other two.
 
 **Profile pictures are base64 blobs, now inside the public profile.** At
 300x300 and quality 50 that is tens of kilobytes of base64 pulled on every

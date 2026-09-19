@@ -52,6 +52,20 @@ The decisions — which transitions notify, who they reach, what they say — li
 in [`functions/src/decide.ts`](functions/src/decide.ts), which is pure and unit
 tested. The triggers in `index.ts` only resolve recipients and write.
 
+## Current state
+
+**Not deployed.** The project is on the Spark plan, which cannot run Cloud
+Functions, so nothing below is live yet.
+
+Until it is, the app writes notification records itself — see the `INTERIM`
+blocks in `firestore.rules`, `NotificationService` and `PaymentService`. That
+fills the in-app notification list but sends no push, because sending through
+FCM needs server credentials the app does not have.
+
+Deploying the functions is what replaces that. At the same time, set
+`allow create` on `notifications` back to `if false` and delete the two
+interim blocks in the Dart.
+
 ## Deploying
 
 **Cloud Functions require the Blaze plan.** The free Spark plan cannot deploy

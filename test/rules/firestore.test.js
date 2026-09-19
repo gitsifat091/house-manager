@@ -696,24 +696,54 @@ describe('notifications', () => {
     );
   });
 
-  it('no client may create one, not even for itself', async () => {
-    // Cloud Functions write these with admin credentials, which bypass rules.
-    // Letting clients create them was a way to push to a stranger's phone.
-    await assertFails(
+  // INTERIM: clients create these again while Cloud Functions are undeployed.
+  // When functions go live, `allow create` goes back to `if false` and these
+  // three tests become assertFails.
+  it('a tenant may notify its landlord', async () => {
+    await assertSucceeds(
       addDoc(collection(asTenantA(), 'notifications'), {
         userId: LANDLORD_A, title: 'Payment', body: 'Submitted',
         isRead: false, createdAt: 1, type: 'payment_submitted',
       }),
     );
-    await assertFails(
-      addDoc(collection(asTenantA(), 'notifications'), {
-        userId: TENANT_A, title: 'x', body: 'y',
-        isRead: false, createdAt: 1, type: 'notice',
+  });
+
+  it('a landlord may notify its tenant', async () => {
+    await assertSucceeds(
+      addDoc(collection(asLandlordA(), 'notifications'), {
+        userId: TENANT_A, title: 'Approved', body: 'Paid',
+        isRead: false, createdAt: 1, type: 'payment_approved',
       }),
     );
+  });
+
+  it('a landlord can read its tenant uid to address one', async () => {
+    // How the interim client path resolves a tenant record id to an account.
+    await assertSucceeds(getDoc(doc(asLandlordA(), 'tenants', REC_A)));
+  });
+
+  it('cannot create one already marked read', async () => {
     await assertFails(
-      addDoc(collection(asLandlordA(), 'notifications'), {
-        userId: TENANT_A, title: 'x', body: 'y',
+      addDoc(collection(asTenantA(), 'notifications'), {
+        userId: LANDLORD_A, title: 'x', body: 'y',
+        isRead: true, createdAt: 1, type: 'payment_submitted',
+      }),
+    );
+  });
+
+  it('cannot stuff extra fields into a notification', async () => {
+    await assertFails(
+      addDoc(collection(asTenantA(), 'notifications'), {
+        userId: LANDLORD_A, title: 'x', body: 'y', isRead: false,
+        createdAt: 1, type: 'notice', payload: 'unexpected',
+      }),
+    );
+  });
+
+  it('cannot create one addressed to nobody', async () => {
+    await assertFails(
+      addDoc(collection(asTenantA(), 'notifications'), {
+        userId: '', title: 'x', body: 'y',
         isRead: false, createdAt: 1, type: 'notice',
       }),
     );

@@ -128,6 +128,79 @@ class NotificationService {
     }
   }
 
+  // ── INTERIM ──────────────────────────────────────────────────────
+  //
+  // Cloud Functions are supposed to create every notification; see
+  // functions/src/index.ts and PUSH_NOTIFICATIONS.md. They are not deployed,
+  // because the project is on the Spark plan and functions need Blaze, so
+  // these write the in-app records directly for now.
+  //
+  // This only fills the notification list. There is still no push: sending
+  // through FCM needs server credentials the app does not have.
+  //
+  // Delete this block, restore `allow create: if false` on notifications in
+  // firestore.rules, and drop the call sites in PaymentService once the
+  // functions are live.
+
+  /// Records a notification for [userId], which must be an Auth uid.
+  static Future<void> _record({
+    required String userId,
+    required String title,
+    required String body,
+    required String type,
+  }) async {
+    if (userId.isEmpty) return;
+    try {
+      await _db.collection('notifications').add({
+        'userId': userId,
+        'title': title,
+        'body': body,
+        'isRead': false,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+        'type': type,
+      });
+    } catch (_) {
+      // A notification is never worth failing the action that caused it.
+    }
+  }
+
+  /// Notifies a landlord. [landlordId] is already an Auth uid.
+  static Future<void> notifyLandlord({
+    required String landlordId,
+    required String title,
+    required String body,
+    required String type,
+  }) =>
+      _record(userId: landlordId, title: title, body: body, type: type);
+
+  /// Notifies the tenant behind a tenant *record*.
+  ///
+  /// The id on a payment or bill is the tenant document id, not an Auth uid,
+  /// and the notification list is queried by uid. The previous version of
+  /// this passed the document id straight through, so tenant notifications
+  /// were addressed to an id nothing ever queried and were never seen by
+  /// anybody. Resolve it properly.
+  static Future<void> notifyTenantRecord({
+    required String tenantDocId,
+    required String title,
+    required String body,
+    required String type,
+  }) async {
+    if (tenantDocId.isEmpty) return;
+    try {
+      final doc = await _db.collection('tenants').doc(tenantDocId).get();
+      final uid = (doc.data()?['userId'] ?? '') as String? ?? '';
+      // Empty means they have not claimed their record, so there is no
+      // account to notify.
+      if (uid.isEmpty) return;
+      await _record(userId: uid, title: title, body: body, type: type);
+    } catch (_) {
+      // As above.
+    }
+  }
+
+  // ── end INTERIM ──────────────────────────────────────────────────
+
   /// A message arriving while the app is open is not drawn by the system, so
   /// show it in-app instead.
   void _showForeground(RemoteMessage message) {

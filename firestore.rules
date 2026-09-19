@@ -394,15 +394,28 @@ service cloud.firestore {
 
     // ── notifications ───────────────────────────────────────────
     //
-    // Written only by Cloud Functions, which run with admin credentials and
-    // bypass these rules. Clients used to create them, which meant anyone
-    // signed in could address one to anyone — harmless while they were just
-    // in-app records, a way to push spam to a stranger's phone now that they
-    // produce notifications. See functions/src/index.ts.
+    // These are meant to be written only by Cloud Functions, which run with
+    // admin credentials and bypass these rules entirely.
+    //
+    // INTERIM — the functions are not deployed, because the project is on
+    // the Spark plan and Cloud Functions need Blaze. Until they are, clients
+    // write these themselves, which means any signed-in user can address a
+    // notification to any uid. That is the spam vector this rule had closed.
+    // The shape is still validated, so it cannot carry arbitrary payloads,
+    // and reads stay restricted to the addressee.
+    //
+    // To undo: set this back to `allow create: if false`, delete the interim
+    // block in NotificationService, and restore the call sites in
+    // PaymentService. All three are marked INTERIM.
     match /notifications/{notificationId} {
       allow get, list: if signedIn() && resource.data.get('userId', '') == uid();
 
-      allow create: if false;
+      allow create: if signedIn()
+        && request.resource.data.get('userId', '') is string
+        && request.resource.data.get('userId', '') != ''
+        && request.resource.data.get('isRead', true) == false
+        && request.resource.data.keys().hasOnly(
+             ['userId', 'title', 'body', 'isRead', 'createdAt', 'type']);
 
       // The recipient may mark it read, and nothing else.
       allow update: if signedIn()
