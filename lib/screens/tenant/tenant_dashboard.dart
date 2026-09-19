@@ -17,7 +17,6 @@ import 'tenant_profile_screen.dart';
 import 'find_home_screen.dart';
 import 'my_rental_requests_screen.dart';
 import 'tenant_history_screen.dart';
-// import 'landlord_info_screen.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
