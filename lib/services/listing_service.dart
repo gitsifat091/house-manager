@@ -527,6 +527,8 @@ class ListingService {
     final tenantRef = _db.collection('tenants').doc();
     final tenant = TenantModel(
       id: tenantRef.id,
+      // The requester is signed in, so the account link is known up front.
+      userId: request.tenantUserId,
       name: request.tenantName,
       phone: request.tenantPhone,
       email: request.tenantEmail,
@@ -557,6 +559,7 @@ class ListingService {
     // 5. অন্য pending requests এই room এর জন্য → rejected
     final otherRequests = await _db
         .collection('rentalRequests')
+        .where('landlordId', isEqualTo: request.landlordId)
         .where('roomId', isEqualTo: request.roomId)
         .where('status', isEqualTo: 'pending')
         .get();

@@ -755,6 +755,7 @@ import '../../../models/tenant_model.dart';
 import '../../../models/payment_model.dart';
 import '../../../services/auth_service.dart';
 import '../../../widgets/profile_avatar.dart';
+import '../../services/tenant_identity_service.dart';
 
 class TenantProfileScreen extends StatelessWidget {
   final dynamic user;
@@ -763,22 +764,19 @@ class TenantProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<QuerySnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('tenants')
-            .where('email', isEqualTo: user.email)
-            .where('isActive', isEqualTo: true)
-            .limit(1)
-            .get(),
+      body: FutureBuilder<TenantModel?>(
+        future: TenantIdentityService.activeTenancy(
+          uid: user.uid,
+          email: user.email,
+        ),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snap.hasData || snap.data!.docs.isEmpty) {
+          final tenant = snap.data;
+          if (tenant == null) {
             return _BasicProfileView(user: user);
           }
-          final doc = snap.data!.docs.first;
-          final tenant = TenantModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
           return _FullProfileView(user: user, tenant: tenant);
         },
       ),

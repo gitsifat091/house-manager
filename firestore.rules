@@ -1,0 +1,399 @@
+rules_version = '2';
+
+// House Manager — Cloud Firestore security rules.
+//
+// Model: a landlord owns properties, rooms, tenants, payments, utilities,
+// notices and house rules. A tenant is a person with an account plus a record
+// in `tenants` whose `userId` is their Auth uid.
+//
+// Two anchors do most of the work:
+//   * `landlordId` is stored on every landlord-owned document.
+//   * `users/{uid}.tenantDocId` points at the caller's tenant record, because
+//     rules cannot run a query to find it. TenantIdentityService keeps it
+//     current, and ownsTenantRecord falls back to reading the record directly
+//     if the pointer is stale or missing.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Identity ────────────────────────────────────────────────
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // The caller's verified email, lowercased. Used only to claim a tenant
+    // record that has no owner yet.
+    function authEmail() {
+      return signedIn() && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    function userData() {
+      return get(/databases/$(database)/documents/users/$(uid())).data;
+    }
+
+    function isLandlord() {
+      return signedIn() && userData().get('role', '') == 'landlord';
+    }
+
+    function myTenantDocId() {
+      return signedIn() ? userData().get('tenantDocId', '') : '';
+    }
+
+    function tenantRecord(tenantDocId) {
+      return get(/databases/$(database)/documents/tenants/$(tenantDocId)).data;
+    }
+
+    function tenantRecordExists(tenantDocId) {
+      return tenantDocId is string
+        && tenantDocId != ''
+        && exists(/databases/$(database)/documents/tenants/$(tenantDocId));
+    }
+
+    // True when tenantDocId names a tenant record belonging to the caller.
+    // The pointer is checked first so the common path is one document read.
+    function ownsTenantRecord(tenantDocId) {
+      return signedIn()
+        && tenantDocId is string
+        && tenantDocId != ''
+        && (
+          tenantDocId == myTenantDocId()
+          || (
+            tenantRecordExists(tenantDocId)
+            && tenantRecord(tenantDocId).get('userId', '') == uid()
+          )
+        );
+    }
+
+    // The landlord the caller rents from, or '' if they rent from nobody.
+    function myLandlordId() {
+      return tenantRecordExists(myTenantDocId())
+        ? tenantRecord(myTenantDocId()).get('landlordId', '')
+        : '';
+    }
+
+    function ownsProperty(propertyId) {
+      return signedIn()
+        && propertyId is string
+        && propertyId != ''
+        && exists(/databases/$(database)/documents/properties/$(propertyId))
+        && get(/databases/$(database)/documents/properties/$(propertyId))
+             .data.get('landlordId', '') == uid();
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────
+
+    function ownsExisting() {
+      return signedIn() && resource.data.get('landlordId', '') == uid();
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.get('landlordId', '') == uid();
+    }
+
+    function onlyChanged(allowed) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+    }
+
+    // ── users ───────────────────────────────────────────────────
+    //
+    // Readable by any signed-in user: the app shows landlord names and tenant
+    // avatars, and looks accounts up by email. That exposes profile fields
+    // (including phone and fcmToken) to every signed-in user — see
+    // SECURITY.md for the follow-up that narrows this.
+    match /users/{userId} {
+      allow get, list: if signedIn();
+
+      allow create: if signedIn()
+        && userId == uid()
+        && request.resource.data.get('uid', '') == uid()
+        && request.resource.data.get('role', '') in ['landlord', 'tenant'];
+
+      // A user may edit their own profile but never their uid or their role.
+      allow update: if signedIn()
+        && userId == uid()
+        && request.resource.data.get('uid', '') == resource.data.get('uid', '')
+        && request.resource.data.get('role', '') == resource.data.get('role', '');
+
+      allow delete: if false;
+    }
+
+    // ── tenants ─────────────────────────────────────────────────
+
+    match /tenants/{tenantId} {
+
+      // An unowned record whose email matches the caller's verified address.
+      // This is the one place email still grants access, and only to records
+      // nobody has claimed — it is how existing data gets linked to accounts.
+      function claimable() {
+        return authEmail() != ''
+          && resource.data.get('userId', '') == ''
+          && (
+            resource.data.get('emailLower', '') == authEmail()
+            || resource.data.get('email', '').lower() == authEmail()
+          );
+      }
+
+      allow get, list: if ownsExisting()
+        || (signedIn() && resource.data.get('userId', '') == uid())
+        || claimable();
+
+      allow create: if isLandlord() && ownsIncoming();
+
+      allow update: if
+        // The landlord who owns the record.
+        ownsExisting()
+        // The tenant claiming an unowned record: may only set the owner.
+        || (
+          claimable()
+          && request.resource.data.get('userId', '') == uid()
+          && onlyChanged(['userId', 'emailLower'])
+        )
+        // The tenant editing their own profile. Cannot move themselves to
+        // another room, change their rent, or reassign their landlord.
+        || (
+          signedIn()
+          && resource.data.get('userId', '') == uid()
+          && onlyChanged(['name', 'phone', 'email', 'emailLower',
+                          'nidNumber', 'hasEdited'])
+        );
+
+      allow delete: if ownsExisting();
+    }
+
+    // ── properties ──────────────────────────────────────────────
+
+    match /properties/{propertyId} {
+      allow get, list: if ownsExisting();
+      allow create: if isLandlord() && ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    // ── rooms ───────────────────────────────────────────────────
+    //
+    // Rooms carry no landlordId, so ownership resolves through the property.
+    match /rooms/{roomId} {
+      function myRoom() {
+        return signedIn()
+          && resource.data.get('tenantId', '') != ''
+          && resource.data.get('tenantId', '') == myTenantDocId();
+      }
+
+      allow get, list: if myRoom()
+        || ownsProperty(resource.data.get('propertyId', ''));
+
+      allow create: if isLandlord()
+        && ownsProperty(request.resource.data.get('propertyId', ''));
+
+      allow update: if ownsProperty(resource.data.get('propertyId', ''))
+        // A tenant renaming themselves keeps the cached copy on the room in
+        // step, and may change nothing else.
+        || (myRoom() && onlyChanged(['tenantName']));
+
+      allow delete: if ownsProperty(resource.data.get('propertyId', ''));
+    }
+
+    // ── payments ────────────────────────────────────────────────
+
+    match /payments/{paymentId} {
+      allow get, list: if ownsExisting()
+        || ownsTenantRecord(resource.data.get('tenantId', ''));
+
+      allow create: if isLandlord() && ownsIncoming();
+
+      allow update: if
+        ownsExisting()
+        // A tenant submitting a payment for approval. They cannot mark it
+        // paid: status must land on 'submitted', and approval stays with the
+        // landlord.
+        || (
+          ownsTenantRecord(resource.data.get('tenantId', ''))
+          && onlyChanged(['status', 'submittedAt', 'paymentMethod',
+                          'transactionId', 'note'])
+          && request.resource.data.get('status', '') == 'submitted'
+        );
+
+      allow delete: if ownsExisting();
+    }
+
+    // ── utilities ───────────────────────────────────────────────
+
+    match /utilities/{utilityId} {
+      allow get, list: if ownsExisting()
+        || ownsTenantRecord(resource.data.get('tenantId', ''));
+
+      allow create: if isLandlord() && ownsIncoming();
+
+      allow update: if
+        ownsExisting()
+        // A tenant submitting a bill. isPaid stays under landlord control.
+        || (
+          ownsTenantRecord(resource.data.get('tenantId', ''))
+          && onlyChanged(['isSubmitted', 'paymentMethod', 'submissionNote'])
+          && request.resource.data.get('isSubmitted', false) == true
+          && request.resource.data.get('isPaid', false)
+             == resource.data.get('isPaid', false)
+        );
+
+      allow delete: if ownsExisting();
+    }
+
+    // ── maintenance ─────────────────────────────────────────────
+
+    match /maintenance/{requestId} {
+      allow get, list: if ownsExisting()
+        || ownsTenantRecord(resource.data.get('tenantId', ''));
+
+      allow create: if ownsIncoming()
+        || (
+          signedIn()
+          && ownsTenantRecord(request.resource.data.get('tenantId', ''))
+          && request.resource.data.get('status', '') == 'pending'
+        );
+
+      allow update: if ownsExisting();
+      allow delete: if ownsExisting();
+    }
+
+    // ── notices and house rules ─────────────────────────────────
+    //
+    // Written by a landlord, read by that landlord's tenants.
+
+    match /notices/{noticeId} {
+      allow get, list: if ownsExisting()
+        || resource.data.get('landlordId', '') == myLandlordId();
+      allow create: if isLandlord() && ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    match /rules/{ruleId} {
+      allow get, list: if ownsExisting()
+        || resource.data.get('landlordId', '') == myLandlordId();
+      allow create: if isLandlord() && ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    // ── listings and rental requests ────────────────────────────
+    //
+    // Listings are the public to-let board: any signed-in user may browse.
+
+    match /listings/{listingId} {
+      allow get, list: if signedIn();
+      allow create: if isLandlord() && ownsIncoming();
+      allow update, delete: if ownsExisting();
+    }
+
+    match /rentalRequests/{requestId} {
+      allow get, list: if ownsExisting()
+        || (signedIn() && resource.data.get('tenantUserId', '') == uid());
+
+      allow create: if signedIn()
+        && request.resource.data.get('tenantUserId', '') == uid()
+        && request.resource.data.get('status', '') == 'pending'
+        && request.resource.data.get('landlordId', '') != '';
+
+      // Only the landlord answers a request.
+      allow update: if ownsExisting();
+
+      allow delete: if ownsExisting()
+        || (signedIn() && resource.data.get('tenantUserId', '') == uid());
+    }
+
+    // ── chat ────────────────────────────────────────────────────
+
+    match /chatRooms/{roomId} {
+      function inRoom() {
+        return resource.data.get('landlordId', '') == uid()
+          || ownsTenantRecord(resource.data.get('tenantId', ''));
+      }
+
+      function joiningRoom() {
+        return request.resource.data.get('landlordId', '') == uid()
+          || ownsTenantRecord(request.resource.data.get('tenantId', ''));
+      }
+
+      allow get, list: if signedIn() && inRoom();
+      allow create: if signedIn() && joiningRoom();
+      allow update: if signedIn() && inRoom();
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function parentRoom() {
+          return get(/databases/$(database)/documents/chatRooms/$(roomId)).data;
+        }
+
+        function inParentRoom() {
+          return signedIn()
+            && exists(/databases/$(database)/documents/chatRooms/$(roomId))
+            && (
+              parentRoom().get('landlordId', '') == uid()
+              || ownsTenantRecord(parentRoom().get('tenantId', ''))
+            );
+        }
+
+        allow get, list: if inParentRoom();
+        allow create: if inParentRoom()
+          && request.resource.data.get('senderId', '') == uid();
+        allow update, delete: if false;
+      }
+    }
+
+    // ── community chat ──────────────────────────────────────────
+    //
+    // One room per property. Open to that property's landlord and to anyone
+    // with an active tenancy in it.
+    match /communityChats/{propertyId} {
+      allow read, write: if false;
+
+      match /messages/{messageId} {
+        function inCommunity() {
+          return ownsProperty(propertyId)
+            || (
+              tenantRecordExists(myTenantDocId())
+              && tenantRecord(myTenantDocId()).get('userId', '') == uid()
+              && tenantRecord(myTenantDocId()).get('isActive', false) == true
+              && tenantRecord(myTenantDocId()).get('propertyId', '') == propertyId
+            );
+        }
+
+        allow get, list: if signedIn() && inCommunity();
+        allow create: if signedIn()
+          && inCommunity()
+          && request.resource.data.get('senderId', '') == uid();
+        allow update, delete: if false;
+      }
+    }
+
+    // ── notifications ───────────────────────────────────────────
+    //
+    // A tenant submitting a payment writes a notification addressed to their
+    // landlord, and vice versa, so creation cannot be limited to the caller's
+    // own uid. Reading is.
+    match /notifications/{notificationId} {
+      allow get, list: if signedIn() && resource.data.get('userId', '') == uid();
+
+      allow create: if signedIn()
+        && request.resource.data.get('userId', '') is string
+        && request.resource.data.get('userId', '') != ''
+        && request.resource.data.get('isRead', true) == false
+        && request.resource.data.keys().hasOnly(
+             ['userId', 'title', 'body', 'isRead', 'createdAt', 'type']);
+
+      allow update: if signedIn()
+        && resource.data.get('userId', '') == uid()
+        && onlyChanged(['isRead']);
+
+      allow delete: if signedIn() && resource.data.get('userId', '') == uid();
+    }
+
+    // Anything not matched above is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -77,6 +77,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/tenant_model.dart';
 
 class TenantAvatar extends StatefulWidget {
   final String tenantName;
@@ -104,17 +105,30 @@ class _TenantAvatarState extends State<TenantAvatar> {
   }
 
   Future<void> _loadPhoto() async {
-    try {
-      final snap = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: widget.tenantEmail)
-          .get();
-      if (snap.docs.isNotEmpty && mounted) {
+    // Accounts registered since emails were normalised store them lowercased;
+    // older ones kept whatever casing was typed, so try both.
+    final candidates = <String>{
+      TenantModel.normaliseEmail(widget.tenantEmail),
+      widget.tenantEmail.trim(),
+    }..removeWhere((e) => e.isEmpty);
+
+    for (final email in candidates) {
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .limit(1)
+            .get();
+        if (snap.docs.isEmpty) continue;
+        if (!mounted) return;
         setState(() {
           _photoUrl = snap.docs.first.data()['photoUrl'] as String?;
         });
+        return;
+      } catch (_) {
+        return;
       }
-    } catch (_) {}
+    }
   }
 
   @override

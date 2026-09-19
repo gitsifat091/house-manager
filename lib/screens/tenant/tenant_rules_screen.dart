@@ -243,23 +243,21 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/rule_model.dart';
 import '../../../models/user_model.dart';
 import '../../../services/rules_service.dart';
+import '../../services/tenant_identity_service.dart';
 
 class TenantRulesScreen extends StatelessWidget {
   final UserModel user;
   const TenantRulesScreen({super.key, required this.user});
 
   Future<String?> _getLandlordId() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('tenants')
-        .where('email', isEqualTo: user.email)
-        .where('isActive', isEqualTo: true)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    return snap.docs.first.data()['landlordId'] as String?;
+    final tenant = await TenantIdentityService.activeTenancy(
+      uid: user.uid,
+      email: user.email,
+    );
+    return tenant?.landlordId;
   }
 
   @override

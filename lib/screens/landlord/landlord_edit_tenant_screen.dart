@@ -55,6 +55,7 @@ class _LandlordEditTenantScreenState
         'name': newName,
         'phone': _phoneCtrl.text.trim(),
         'email': _emailCtrl.text.trim(),
+        'emailLower': TenantModel.normaliseEmail(_emailCtrl.text),
         'nidNumber': _nidCtrl.text.trim(),
         'rentAmount': newRent,
         'moveInDate': _moveInDate.millisecondsSinceEpoch, 
@@ -64,6 +65,7 @@ class _LandlordEditTenantScreenState
       if (newName != widget.tenant.name) {
         final roomSnap = await FirebaseFirestore.instance
             .collection('rooms')
+            .where('propertyId', isEqualTo: widget.tenant.propertyId)
             .where('tenantId', isEqualTo: widget.tenant.id)
             .get();
         for (final doc in roomSnap.docs) {
