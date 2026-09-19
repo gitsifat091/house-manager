@@ -31,9 +31,10 @@ initializeApp();
  * Check it at Firebase console -> Firestore Database, top of the page. A
  * multi-region "nam5" maps to us-central1 and "eur3" to europe-west1; a
  * single-region location is used as-is (asia-south1 for Mumbai, and so on).
- * us-central1 is the default a project gets when nobody chooses.
+ * Confirmed asia-south1 for house-manager-bf593 via
+ * `firebase firestore:databases:get "(default)"`.
  */
-const REGION = "us-central1";
+const REGION = "asia-south1";
 
 setGlobalOptions({ region: REGION, maxInstances: 10 });
 

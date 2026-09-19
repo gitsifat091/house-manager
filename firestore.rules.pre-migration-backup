@@ -1,0 +1,88 @@
+// The rules that were live in production until 2026-09-19, captured from
+// the Firebase Rules API before the first deploy of firestore.rules.
+//
+// Kept only as a rollback point. Do NOT deploy this: the catch-all below
+// lets any signed-in user read and write every document in the database,
+// and listings were readable with no authentication at all.
+//
+// firebase.json points at firestore.rules, so this file is inert.
+
+// // rules_version = '2';
+// // service cloud.firestore {
+// //   match /databases/{database}/documents {
+// //     match /users/{userId} {
+// //       allow read, write: if request.auth != null && request.auth.uid == userId;
+// //     }
+// //     match /properties/{propId} {
+// //       allow read, write: if request.auth != null;
+// //     }
+// //     match /tenants/{tenantId} {
+// //       allow read, write: if request.auth != null;
+// //     }
+// //     match /payments/{paymentId} {
+// //       allow read, write: if request.auth != null;
+// //     }
+// //     match /notices/{noticeId} {
+// //       allow read, write: if request.auth != null;
+// //     }
+// //   }
+// // }
+
+// rules_version = '2';
+// service cloud.firestore {
+//   match /databases/{database}/documents {
+//     match /{document=**} {
+//       allow read, write: if request.auth != null;
+//     }
+//   }
+//   match /chatRooms/{roomId} {
+//     allow read, write: if request.auth != null;
+//     match /messages/{msgId} {
+//       allow read, write: if request.auth != null;
+//     }
+//   }
+//   match /listings/{listingId} {
+//     allow read: if true;  // সবাই দেখতে পারবে
+//     allow write: if request.auth != null;
+//   }
+//   match /rentalRequests/{reqId} {
+//     allow read, write: if request.auth != null;
+//   }
+//   match /communityChats/{propertyId}/messages/{msgId} {
+//     allow read, write: if request.auth != null;
+//   }
+// }
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // সব authenticated user এর জন্য
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Listings — না থাকলেও /{document=**} cover করত,
+    // কিন্তু public read এর জন্য আলাদা দরকার
+    match /listings/{listingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /chatRooms/{roomId} {
+      allow read, write: if request.auth != null;
+      match /messages/{msgId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    match /communityChats/{propertyId}/messages/{msgId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /rentalRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+
+  }
+}
