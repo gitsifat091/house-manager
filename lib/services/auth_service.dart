@@ -203,15 +203,6 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // এই method যোগ করো
-  // Future<String?> sendPasswordReset(String email) async {
-  //   try {
-  //     await _auth.sendPasswordResetEmail(email: email);
-  //     return null; // success
-  //   } on FirebaseAuthException catch (e) {
-  //     return _getErrorMessage(e.code);
-  //   }
-  // }
 
   // এই method যোগ করো
   Future<void> updateProfilePicture(String photoUrl) async {
