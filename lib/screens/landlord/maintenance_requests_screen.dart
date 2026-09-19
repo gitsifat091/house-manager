@@ -571,7 +571,6 @@ class _MaintenanceCard extends StatelessWidget {
                     },
                     child: TenantAvatar(
                       tenantName: req.tenantName,
-                      tenantEmail: '',
                       radius: 22,
                     ),
                   ),

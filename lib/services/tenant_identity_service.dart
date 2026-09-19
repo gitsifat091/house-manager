@@ -172,30 +172,6 @@ class TenantIdentityService {
     return claimed;
   }
 
-  /// Looks up the Auth uid registered against [email], if any.
-  ///
-  /// Used when a landlord adds a tenant by hand: if that person already has an
-  /// account we can link the record immediately instead of waiting for them to
-  /// sign in and claim it.
-  static Future<String> uidForEmail(String email) async {
-    final lower = TenantModel.normaliseEmail(email);
-    if (lower.isEmpty) return '';
-    // Accounts created before emails were normalised stored them as typed.
-    for (final candidate in <String>{lower, email.trim()}) {
-      try {
-        final snap = await _db
-            .collection('users')
-            .where('email', isEqualTo: candidate)
-            .limit(1)
-            .get();
-        if (snap.docs.isNotEmpty) return snap.docs.first.id;
-      } on FirebaseException {
-        // fall through — the record stays unlinked and is claimed at sign-in
-      }
-    }
-    return '';
-  }
-
   /// Clears session state on sign-out so the next user starts fresh.
   static void reset() {
     _lastClaimAttempt.clear();

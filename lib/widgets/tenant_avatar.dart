@@ -76,18 +76,25 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/tenant_model.dart';
+import '../services/public_profile_service.dart';
 
 class TenantAvatar extends StatefulWidget {
   final String tenantName;
-  final String tenantEmail;
+
+  /// Auth uid of the person, when it is known.
+  ///
+  /// Null means we cannot resolve a picture and fall back to initials. This
+  /// used to be an email matched against the users collection, which read
+  /// other people's records and, at three of the five call sites, was passed
+  /// an empty string or a name and so never matched anything anyway.
+  final String? userId;
+
   final double radius;
 
   const TenantAvatar({
     super.key,
     required this.tenantName,
-    required this.tenantEmail,
+    this.userId,
     this.radius = 22,
   });
 
@@ -105,30 +112,11 @@ class _TenantAvatarState extends State<TenantAvatar> {
   }
 
   Future<void> _loadPhoto() async {
-    // Accounts registered since emails were normalised store them lowercased;
-    // older ones kept whatever casing was typed, so try both.
-    final candidates = <String>{
-      TenantModel.normaliseEmail(widget.tenantEmail),
-      widget.tenantEmail.trim(),
-    }..removeWhere((e) => e.isEmpty);
-
-    for (final email in candidates) {
-      try {
-        final snap = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: email)
-            .limit(1)
-            .get();
-        if (snap.docs.isEmpty) continue;
-        if (!mounted) return;
-        setState(() {
-          _photoUrl = snap.docs.first.data()['photoUrl'] as String?;
-        });
-        return;
-      } catch (_) {
-        return;
-      }
-    }
+    final uid = widget.userId;
+    if (uid == null || uid.isEmpty) return;
+    final photo = await PublicProfileService.photoOf(uid);
+    if (!mounted || photo == null) return;
+    setState(() => _photoUrl = photo);
   }
 
   @override

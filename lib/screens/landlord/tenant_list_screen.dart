@@ -2364,7 +2364,7 @@ class _TenantCard extends StatelessWidget {
                       ),
                       child: TenantAvatar(
                         tenantName: tenant.name,
-                        tenantEmail: tenant.email,
+                        userId: tenant.userId,
                         radius: 26,
                       ),
                     ),

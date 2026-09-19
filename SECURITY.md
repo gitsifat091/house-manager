@@ -12,7 +12,7 @@ record, including NID numbers, phone numbers, rent amounts and private chats.
 cd test/rules && npm install && npm test
 ```
 
-This starts the Firestore emulator and runs 126 tests against the real rules
+This starts the Firestore emulator and runs 142 tests against the real rules
 file. No project credentials are needed and no live data is touched.
 
 There are two suites:
@@ -55,6 +55,26 @@ Two anchors carry the authorization:
   if the pointer is stale or missing, so a stale pointer costs an extra
   document read rather than locking somebody out.
 
+## Profiles are split in two
+
+Firestore rules cannot restrict *which fields* a read returns, so a collection
+readable by everyone can only hold what everyone may see.
+
+- **`publicProfiles/{uid}`** — `{name, photoUrl}`, readable by any signed-in
+  user. The field list is enforced on write, so it cannot quietly grow into a
+  second copy of the user record.
+- **`users/{uid}`** — phone, email, `fcmToken`, role. Readable only by its
+  owner, plus one exception: a tenant may read their own landlord's record,
+  because the app shows landlord contact details. `myLandlordId()` resolves
+  that through the tenant record, so it cannot be pointed at anyone else.
+
+There is no `list` rule on `users` at all. Nothing queries the collection any
+more, and allowing queries would let one be shaped to enumerate the rest.
+
+Existing accounts get a public profile written the first time they sign in, so
+no migration runs over the user collection. Until then an avatar falls back to
+initials, which is what those call sites already did.
+
 `rooms` is the one collection with no `landlordId`; ownership resolves through
 its parent property.
 
@@ -96,22 +116,6 @@ fixes picking the wrong tenant when two share a name.
 
 These are real and deliberate. They are the next things to fix.
 
-**Any signed-in user can read any user profile.** `users` is world-readable to
-authenticated callers because the app shows landlord names, renders tenant
-avatars, and looks accounts up by email. Firestore rules cannot restrict
-*which fields* a read returns, so this exposes `phone`, `email` and `fcmToken`
-to every signed-in user.
-
-The fix is to split the publicly needed fields into their own collection:
-
-```
-publicProfiles/{uid}  ->  { name, photoUrl }   // readable by any signed-in user
-users/{uid}           ->  everything else      // readable only by the owner
-```
-
-Then `users` becomes `allow read: if userId == uid()`, and `TenantAvatar`
-reads `publicProfiles` instead. This is the single biggest remaining gap.
-
 **Anyone signed in can create a notification addressed to anyone.** A tenant
 submitting a payment writes a notification addressed to their landlord, so
 creation cannot be limited to the caller's own uid. The shape is validated
@@ -120,10 +124,11 @@ addressee, but a determined user could spam another user's notification list.
 Moving notification writes into a Cloud Function closes this properly, and is
 the same change needed to make push notifications actually send.
 
-**Profile pictures are base64 blobs inside the user document.** Combined with
-the point above, every avatar read pulls tens of kilobytes. Moving these to
-Cloud Storage — the `firebase_storage` dependency is already declared and
-unused — fixes the cost and lets `users` be locked down.
+**Profile pictures are base64 blobs, now inside the public profile.** At
+300x300 and quality 50 that is tens of kilobytes of base64 pulled on every
+avatar read, and it is readable by every signed-in user. Moving these to Cloud
+Storage — the `firebase_storage` dependency is already declared and unused —
+would fix the cost and let the picture be served by URL instead.
 
 **Email is still trusted for the initial claim.** Scoped as tightly as it can
 be (unowned records only, verified token email only), but it is the one place

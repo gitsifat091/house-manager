@@ -1495,7 +1495,6 @@ class _TenantBillGroup extends StatelessWidget {
                     ),
                     child: TenantAvatar(
                       tenantName: tenantName,
-                      tenantEmail: '',
                       radius: 18,
                     ),
                   ),

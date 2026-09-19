@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import 'public_profile_service.dart';
 import 'tenant_identity_service.dart';
 
 class AuthService extends ChangeNotifier {
@@ -59,9 +60,29 @@ class AuthService extends ChangeNotifier {
             'তথ্য load করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।';
       }
     }
+    await _publishPublicProfile();
     await _linkTenancies();
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Keeps publicProfiles/{uid} in step with this account.
+  ///
+  /// Also backfills it: accounts created before public profiles existed get
+  /// one the first time they sign in, so no migration has to run over the
+  /// whole user collection.
+  Future<void> _publishPublicProfile() async {
+    final user = _currentUser;
+    if (user == null) return;
+    try {
+      await PublicProfileService.publish(
+        uid: user.uid,
+        name: user.name,
+        photoUrl: user.photoUrl,
+      );
+    } catch (_) {
+      // Cosmetic; never block sign-in on it.
+    }
   }
 
   /// Re-attempts the profile load after a failure.
@@ -128,6 +149,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       await _db.collection('users').doc(user.uid).set(user.toMap());
+      await PublicProfileService.publish(uid: user.uid, name: user.name);
     } catch (e) {
       // The account exists in Auth but has no profile, so it could never sign
       // in — and the email would stay claimed, so the person could not
@@ -170,6 +192,7 @@ class AuthService extends ChangeNotifier {
   // Logout
   Future<void> logout() async {
     TenantIdentityService.reset();
+    PublicProfileService.reset();
     await _auth.signOut();
     _currentUser = null;
     _loadError = null;
@@ -192,6 +215,10 @@ class AuthService extends ChangeNotifier {
     await _db.collection('users').doc(_currentUser!.uid).update({
       'photoUrl': photoUrl,
     });
+    await PublicProfileService.updatePhoto(
+      uid: _currentUser!.uid,
+      photoUrl: photoUrl,
+    );
     _currentUser = UserModel(
       uid: _currentUser!.uid,
       name: _currentUser!.name,

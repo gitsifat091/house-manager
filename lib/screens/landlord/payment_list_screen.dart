@@ -1719,7 +1719,6 @@ class _PaymentCard extends StatelessWidget {
                     ),
                     child: TenantAvatar(
                       tenantName: payment.tenantName,
-                      tenantEmail: payment.tenantName,
                       radius: 18,
                     ),
                   ),

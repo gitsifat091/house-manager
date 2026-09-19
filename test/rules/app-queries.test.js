@@ -63,6 +63,12 @@ beforeEach(async () => {
       uid: TENANT_UID, role: 'tenant', name: 'T', email: TENANT_EMAIL,
       tenantDocId: REC,
     });
+    await setDoc(doc(db, 'publicProfiles', LANDLORD), {
+      name: 'L', photoUrl: null,
+    });
+    await setDoc(doc(db, 'publicProfiles', TENANT_UID), {
+      name: 'T', photoUrl: null,
+    });
     await setDoc(doc(db, 'properties', PROP), {
       landlordId: LANDLORD, name: 'P1',
     });
@@ -351,14 +357,15 @@ describe('tenant screen queries', () => {
       where('isRead', '==', false))));
   });
 
-  it('TenantAvatar looks a user up by email', async () => {
-    await assertSucceeds(getDocs(query(
-      collection(asTenant(), 'users'),
-      where('email', '==', 'l@x.com'),
-      limit(1))));
+  it('TenantAvatar reads a public profile by uid', async () => {
+    await assertSucceeds(getDoc(doc(asTenant(), 'publicProfiles', LANDLORD)));
   });
 
-  it('tenant_chat reads the landlord profile', async () => {
+  it('tenant_chat reads the landlord display name', async () => {
+    await assertSucceeds(getDoc(doc(asTenant(), 'publicProfiles', LANDLORD)));
+  });
+
+  it('tenant reads its own landlord contact details', async () => {
     await assertSucceeds(getDoc(doc(asTenant(), 'users', LANDLORD)));
   });
 });
@@ -385,6 +392,11 @@ describe('write flows', () => {
     }));
     await assertSucceeds(
       updateDoc(doc(asTenant(), 'rooms', ROOM), { tenantName: 'T2' }));
+  });
+
+  it('tenant publishes its own public profile', async () => {
+    await assertSucceeds(setDoc(doc(asTenant(), 'publicProfiles', TENANT_UID),
+      { name: 'T', photoUrl: 'data:image/jpeg;base64,x' }));
   });
 
   it('tenant writes its own tenantDocId pointer', async () => {

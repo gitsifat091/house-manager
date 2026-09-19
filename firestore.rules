@@ -100,14 +100,37 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
     }
 
+    // ── publicProfiles ──────────────────────────────────────────
+    //
+    // What everyone is allowed to see about everyone: a display name and a
+    // picture. Rules cannot restrict which fields a read returns, so a
+    // collection readable by every signed-in user can only hold what every
+    // signed-in user may see. The field list is enforced on write, so this
+    // cannot quietly grow into a second copy of the user record.
+    match /publicProfiles/{userId} {
+      allow get, list: if signedIn();
+
+      allow create, update: if signedIn()
+        && userId == uid()
+        && request.resource.data.keys().hasOnly(['name', 'photoUrl']);
+
+      allow delete: if false;
+    }
+
     // ── users ───────────────────────────────────────────────────
     //
-    // Readable by any signed-in user: the app shows landlord names and tenant
-    // avatars, and looks accounts up by email. That exposes profile fields
-    // (including phone and fcmToken) to every signed-in user — see
-    // SECURITY.md for the follow-up that narrows this.
+    // The full record: phone, email, fcmToken, role. Readable only by its
+    // owner, plus the one case where somebody else genuinely needs it — a
+    // tenant looking up how to contact their own landlord. Everything else
+    // that used to read this collection now reads publicProfiles.
+    //
+    // No list rule: nothing queries this collection any more, and allowing
+    // queries would let one be shaped to enumerate the others.
     match /users/{userId} {
-      allow get, list: if signedIn();
+      allow get: if signedIn()
+        && (userId == uid() || userId == myLandlordId());
+
+      allow list: if false;
 
       allow create: if signedIn()
         && userId == uid()
